@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Recipe Management</h2>
+            <p>Manage all recipes on the platform</p>
+            
+            <!-- Category Filter -->
+            <form method="GET" class="mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select name="category" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+            
+            {% if recipes %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recipe in recipes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ recipe.title }}</strong>
+                                    {% if recipe.description %}
+                                        <br><small class="text-muted">{{ recipe.description|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ recipe.author.username }}</td>
+                                <td>
+                                    {% if recipe.category %}
+                                        {{ recipe.category.name }}
+                                    {% else %}
+                                        <span class="text-muted">No category</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ recipe.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'recipe_detail' recipe.id %}" class="btn btn-sm btn-info">View</a>
+                                    <a href="{% url 'edit_recipe' recipe.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                    <form method="POST" action="{% url 'delete_recipe' recipe.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Delete this recipe?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info">
+                    No recipes found.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

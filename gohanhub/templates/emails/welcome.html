@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to GohanHub</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .btn { display: inline-block; padding: 10px 16px; background:#2563eb; color: white; text-decoration:none; border-radius:6px }
+      .footer { font-size: 12px; color: #777; margin-top: 20px }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="{{ site_url }}/static/images/logo.png" alt="GohanHub" style="height:48px;">
+      <h1>Welcome to GohanHub, {{ username }}!</h1>
+      <p>Thank you for joining our community of food lovers. We're excited to have you.</p>
+      <p>Get started:</p>
+      <ul>
+        <li>Share your first recipe</li>
+        <li>Explore recipes from other users</li>
+        <li>Follow cooks whose food you love</li>
+      </ul>
+      <p>
+        <a href="{{ site_url }}/explore" class="btn">Explore Recipes</a>
+      </p>
+      <p class="footer">If you didn't sign up for this account, you can ignore this email.</p>
+    </div>
+  </body>
+</html>

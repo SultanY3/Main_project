@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-4">Add New Recipe</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Recipe Title *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   required 
+                                   placeholder="e.g., Chocolate Chip Cookies">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                {% for cat in all_categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3" 
+                                      placeholder="Brief description of your recipe..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ingredients" class="form-label">Ingredients</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="ingredients" 
+                                   name="ingredients" 
+                                   placeholder="e.g., flour, sugar, eggs, butter">
+                            <small class="form-text text-muted">Separate ingredients with commas</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="instructions" class="form-label">Instructions *</label>
+                            <textarea class="form-control" 
+                                      id="instructions" 
+                                      name="instructions" 
+                                      rows="8" 
+                                      required 
+                                      placeholder="Step 1: Preheat oven to 350°F&#10;Step 2: Mix dry ingredients&#10;Step 3: ..."></textarea>
+                            <small class="form-text text-muted">Write each step on a new line</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Recipe Image</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="image" 
+                                   name="image" 
+                                   accept="image/*">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Add Recipe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

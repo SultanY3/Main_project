@@ -1,0 +1,38 @@
+/* Bootstrap + Tailwind coexistence */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic app styles */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Tailwind rating stars with prefix */
+.tw-rating-stars svg {
+  transition: transform 0.08s ease, opacity 0.08s ease;
+}
+.tw-rating-stars button:active svg {
+  transform: scale(0.98);
+}
+
+:focus {
+  outline: 2px solid #ffc600;
+  outline-offset: 2px;
+}

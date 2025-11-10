@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="recipe-detail-container">
+                <!-- Back Button -->
+                <!-- <div class="mb-3">
+                    <a href="{% url 'home' %}" class="btn btn-secondary me-2">
+                        Back to Recipes
+                    </a>
+                </div> -->
+                <!-- {% if user.is_authenticated %}
+                    <div class="mb-3">
+                        {% if user == recipe.author %}
+                            <a href="{% url 'profile' %}" class="btn btn-secondary me-2">
+                                Back to Profile
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %} -->
+                <!-- Recipe Header -->
+                <div class="text-center mb-4">
+                    <h1 class="display-4 page-header mb-3">{{ recipe.title }}</h1>
+                    <p class="text-muted">
+                        Created by <strong>{{ recipe.author.username }}</strong>
+                    </p>
+                </div>
+
+                <!-- Recipe Image -->
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" 
+                         class="recipe-image shadow" 
+                         alt="{{ recipe.title }}">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded mb-4" style="height: 400px;">
+                        <span class="text-muted">No Image Available</span>
+                    </div>
+                {% endif %}
+
+                <!-- Description -->
+                {% if recipe.description %}
+                    <div class="mb-4">
+                        <h3 class="h4 mb-3">Description</h3>
+                        <p class="lead text-muted">{{ recipe.description }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Ingredients -->
+                    <div class="col-md-5">
+                        <div class="ingredients-list">
+                            <h3 class="h4 mb-3">Ingredients</h3>
+                            <ul class="list-unstyled">
+                                {% for ingredient in recipe.ingredients.all %}
+                                    <li class="mb-2">
+                                        • {{ ingredient.name }}
+                                    </li>
+                                {% empty %}
+                                    <li class="text-muted">No ingredients listed.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="col-md-7">
+                        <div class="instructions-list">
+                            <h3 class="h4 mb-3">Instructions</h3>
+                            <ol>
+                                {% for step in recipe.instructions.splitlines %}
+                                    {% if step %}
+                                        <li class="mb-2">{{ step }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                {% if user.is_authenticated %}
+                    <div class="text-center mt-4" >
+                        <!-- Favorite Button -->
+                        {% if not user.is_superuser %}
+                            <form method="post" action="{% url 'toggle_favorite' recipe.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn {% if is_favorite %}btn-danger{% else %}btn-success{% endif %} me-2">
+                                    {% if is_favorite %}
+                                        Remove from Favorites
+                                    {% else %}
+                                        Add to Favorites
+                                    {% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+                        <!-- Admin or Owner Controls -->
+                        {% if user.is_superuser or user == recipe.author %}
+                            <a href="{% url 'edit_recipe' recipe.id %}" class="btn btn-primary me-2">
+                                Edit Recipe
+                            </a>
+                            <form method="post" action="{% url 'delete_recipe' recipe.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                        class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete this recipe?')">
+                                    Delete Recipe
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
