@@ -32,7 +32,13 @@ const ExplorePage = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`/categories/`);
-      setCategories(extractArray(response.data, 'categories'));
+      // Be flexible to handle array, paginated 'results', or nested 'categories'
+      const arr = Array.isArray(response.data)
+        ? response.data
+        : (Array.isArray(response.data?.results) && response.data.results) ||
+          (Array.isArray(response.data?.categories) && response.data.categories) ||
+          [];
+      setCategories(arr);
     } catch (error) {
       console.error('Failed to fetch categories:', error?.response?.data || error.message);
       setCategories([]);

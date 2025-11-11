@@ -27,22 +27,23 @@ class FollowUserView(generics.CreateAPIView):
                 {"detail": "You cannot follow yourself."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         follow, created = Follow.objects.get_or_create(
             follower=request.user,
             following=target_user
         )
         if not created:
             return Response(
-                {"detail": "You are already following this user."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "You are already following this user.", "is_following": True},
+                status=status.HTTP_200_OK  # Still return a toggle-able response
             )
-        serializer = UserFollowStatsSerializer(target_user, context={'request': request})
         # Create notification for the followed user
         try:
             create_follow_notification(request.user, target_user)
         except Exception:
             pass
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response({'is_following': True}, status=status.HTTP_200_OK)
 
 class UnfollowUserView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -55,12 +56,11 @@ class UnfollowUserView(generics.DestroyAPIView):
                 following=target_user
             )
             follow.delete()
-            serializer = UserFollowStatsSerializer(target_user, context={'request': request})
-            return Response(serializer.data)
+            return Response({'is_following': False}, status=status.HTTP_200_OK)
         except Follow.DoesNotExist:
             return Response(
-                {"detail": "You are not following this user."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "You are not following this user.", "is_following": False},
+                status=status.HTTP_200_OK  # Always return state
             )
 
 class UserFollowersView(generics.ListAPIView):

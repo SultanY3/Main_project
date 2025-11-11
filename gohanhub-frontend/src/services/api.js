@@ -50,6 +50,7 @@ export const userAPI = {
   getProfile: (id) => api.get(`/users/${id}/`),
   getCurrentUser: () => api.get('/auth/user/'),
   follow: (id) => api.post(`/users/${id}/follow/`),
+  unfollow: (id) => api.delete(`/users/${id}/unfollow/`),
   getFollowers: (id) => api.get(`/users/${id}/followers/`),
   getFollowing: (id) => api.get(`/users/${id}/following/`),
   getFavorites: () => api.get('/users/me/favorites/'),

@@ -2,9 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const RecipeCard = ({ recipe }) => {
+  const imageUrl = recipe.image || 'https://via.placeholder.com/600x400?text=Recipe+Image';
+  const authorName =
+    (recipe.author && (recipe.author.username || recipe.author.name)) ||
+    recipe.author_username ||
+    recipe.author_name ||
+    'Unknown';
   return (
     <div className="recipe-card">
       <Link to={`/recipes/${recipe.id}`}>
+        <div className="card-media">
+          <img className="recipe-card-img" src={imageUrl} alt={recipe.title} />
+        </div>
         <div className="card-header">
           <h3>{recipe.title}</h3>
           {recipe.category && <span className="card-category">{recipe.category.name || recipe.category}</span>}
@@ -19,7 +28,7 @@ const RecipeCard = ({ recipe }) => {
       </Link>
       <div className="card-meta">
         <span className="card-author">
-          By <strong>{recipe.author?.username || 'Unknown'}</strong>
+          By <strong>{authorName}</strong>
         </span>
         <span className="card-date">
           {recipe.created_at ? new Date(recipe.created_at).toLocaleDateString() : ''}

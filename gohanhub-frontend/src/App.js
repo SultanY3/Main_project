@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import AddRecipePage from './pages/AddRecipePage';
 import EditRecipePage from './pages/EditRecipePage';
+import NotificationsPage from './pages/NotificationsPage';
 import FavoritesPage from './pages/FavoritesPage';
 
 // ✅ Sub-component that waits until auth is loaded
@@ -45,6 +46,11 @@ function AppContent() {
             <ProfilePage />
           </ProtectedRoute>
         } />
+        <Route path="/profile/:id" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
         <Route path="/add" element={
           <ProtectedRoute>
             <AddRecipePage />
@@ -60,10 +66,17 @@ function AppContent() {
             <FavoritesPage />
           </ProtectedRoute>
         } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        } />
         <Route path="/chatbot" element={<Chatbot />} />
         {/* 404 fallback: */}
         <Route path="*" element={<div className="app-404">404 - Page not found</div>} />
       </Routes>
+      {/* Floating chatbot toggle visible across the app */}
+      <Chatbot />
     </>
   );
 }

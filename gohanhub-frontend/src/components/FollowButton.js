@@ -20,24 +20,30 @@ const FollowButton = ({ targetUserId, isFollowing: initialFollowing = false, onF
   const handleFollowToggle = async () => {
     if (loading) return;
     setLoading(true);
+
+    // Optimistic update
+    const previous = isFollowing;
+    const next = !previous;
+    setIsFollowing(next);
+
     try {
       let response;
-      if (isFollowing) {
+      if (previous) {
         // Unfollow: use DELETE
         response = await axios.delete(`/users/${targetUserId}/unfollow/`);
       } else {
         // Follow: use POST
         response = await axios.post(`/users/${targetUserId}/follow/`);
       }
-      // Prefer backend response, fallback to toggle
+      // Reconcile with backend response
       if (response?.data?.is_following !== undefined) {
         setIsFollowing(response.data.is_following);
-      } else {
-        setIsFollowing(!isFollowing);
       }
       if (onFollow) onFollow(); // Callback to parent (profile refresh)
     } catch (error) {
       console.error('Failed to toggle follow:', error?.response?.data || error.message);
+      // Rollback optimistic update on error
+      setIsFollowing(previous);
       alert(
         error?.response?.data?.detail ||
         'Failed to update follow status'
@@ -49,18 +55,11 @@ const FollowButton = ({ targetUserId, isFollowing: initialFollowing = false, onF
 
   return (
     <button
-      className={`follow-btn${isFollowing ? ' following' : ''}`}
+      className={`btn btn-follow${isFollowing ? ' is-following' : ''}`}
       onClick={handleFollowToggle}
       disabled={loading}
-      style={{
-        padding: '0.4em 1.2em',
-        borderRadius: '4px',
-        background: isFollowing ? '#ffc600' : '#e0e0e0',
-        color: isFollowing ? '#222' : '#444',
-        cursor: loading ? 'wait' : 'pointer',
-        border: 'none',
-        fontWeight: 'bold'
-      }}
+      aria-pressed={isFollowing}
+      aria-label={isFollowing ? 'Unfollow user' : 'Follow user'}
     >
       {loading ? '...' : isFollowing ? 'Unfollow' : 'Follow'}
     </button>

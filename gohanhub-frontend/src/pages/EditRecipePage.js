@@ -35,7 +35,9 @@ const EditRecipePage = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      await axios.put(`/recipes/${id}/`, formData);
+      await axios.put(`/recipes/${id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       navigate(`/recipes/${id}`);
     } catch (error) {
       console.error('Failed to update recipe:', error?.response?.data || error.message);

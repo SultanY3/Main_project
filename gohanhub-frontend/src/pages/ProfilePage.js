@@ -26,6 +26,9 @@ const ProfilePage = () => {
     if (profileId) {
       fetchProfile();
       fetchUserRecipes();
+    } else {
+      // Avoid being stuck in loading state if profileId is not yet available
+      setLoading(false);
     }
     // eslint-disable-next-line
   }, [profileId]);

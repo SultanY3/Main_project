@@ -9,7 +9,9 @@ const AddRecipePage = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await axios.post(`/recipes/`, formData);
+      const response = await axios.post(`/recipes/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       navigate(`/recipes/${response.data.id}`);
     } catch (error) {
       console.error(

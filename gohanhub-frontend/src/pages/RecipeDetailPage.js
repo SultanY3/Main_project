@@ -60,19 +60,20 @@ const RecipeDetailPage = () => {
 
   const handleFavoriteToggle = async () => {
     if (!isAuthenticated) {
-      alert('Please login to favorite recipes');
+      alert("Please login to favorite recipes");
       return;
     }
     setFavoriteLoading(true);
     try {
       await axios.post(`/recipes/${id}/favorite/`);
-      setIsFavorite((prev) => !prev);
+      fetchRecipe(); // Refetch to get updated favorites count
     } catch (error) {
-      alert('Failed to update favorite status');
+      alert("Failed to update favorite status");
     } finally {
       setFavoriteLoading(false);
     }
   };
+
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
@@ -89,9 +90,13 @@ const RecipeDetailPage = () => {
   if (!recipe) return <div className="recipe-empty">Recipe not found.</div>;
 
   const canEdit = user && recipe.author?.id === user.id;
+  const imageUrl = recipe.image || 'https://via.placeholder.com/1200x600?text=Recipe+Image';
 
   return (
     <div className="recipe-detail">
+      <div className="recipe-hero">
+        <img src={imageUrl} alt={recipe.title} className="recipe-hero-img" />
+      </div>
       <h2>{recipe.title}</h2>
       <div className="recipe-meta">
         <span>

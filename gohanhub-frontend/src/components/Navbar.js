@@ -39,9 +39,9 @@ const Navbar = () => {
         <span role="img" aria-label="logo">🍜</span> GohanHub
       </Link>
       <ul className="navbar-links">
-        <li>
+        {/* <li>
           <Link to="/">Home</Link>
-        </li>
+        </li> */}
         {isAuthenticated && (
           <>
             <li>
@@ -55,6 +55,9 @@ const Navbar = () => {
         <li>
           <Link to="/explore">Explore</Link>
         </li>
+        {/* <li>
+          <Link to="/chatbot">Chatbot</Link>
+        </li> */}
         {isAuthenticated ? (
           <>
             <li>
