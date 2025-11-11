@@ -134,19 +134,20 @@ REST_FRAMEWORK = {
 # ========================================
 # django-allauth Configuration (v0.50+ dictionary format)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
+
+ACCOUNT_LOGIN_METHODS = ['email']  
+
 ACCOUNT_SIGNUP_FIELDS = {
-    "username": {"required": True, "min_length": 3, "max_length": 150},
+    "username": {"required": True, "min_length": 3, "max_length": 150},  # Or False
     "email": {"required": True, "verifiable": True},
     "password1": {"required": True},
     "password2": {"required": True},
 }
+
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-LOGIN_METHODS = ['email']
+
 
 
 # dj-rest-auth Configuration
@@ -203,7 +204,7 @@ CORS_ALLOW_HEADERS = [
     'origin', 'user-agent', 'x-csrftoken', 'x-requested-with'
 ]
 
-SITE_ID = int(os.environ.get("SITE_ID", "1"))
+SITE_ID = int(os.environ.get("SITE_ID", "2"))
 
 # Social Authentication (Google OAuth)
 SOCIALACCOUNT_PROVIDERS = {
