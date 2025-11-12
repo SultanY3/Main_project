@@ -33,8 +33,8 @@ const HomePage = () => {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <div className="homepage">
-      <h2>Discover and share amazing recipes from around the world</h2>
+    <div className="homepage page-container">
+      <h2 className="section-title">Discover and share amazing recipes from around the world</h2>
       {recipes.length === 0 ? (
         <div className="empty-list">No recipes found. Be the first to add one!</div>
       ) : (

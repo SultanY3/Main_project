@@ -38,8 +38,8 @@ const FavoritesPage = () => {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <div className="favorites-page">
-      <h2>Your Favorite Recipes</h2>
+    <div className="favorites-page page-container">
+      <h2 className="section-title">Your Favorite Recipes</h2>
       {favorites.length === 0 ? (
         <div className="empty-list">Start adding recipes to your favorites to see them here.</div>
       ) : (

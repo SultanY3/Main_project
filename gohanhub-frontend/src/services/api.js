@@ -80,6 +80,9 @@ export const authAPI = {
   googleLogin: (token) => api.post('/auth/google/', { token }),
   logout: () => api.post('/auth/logout/'),
   getUser: () => api.get('/auth/user/'),
+  requestResetOtp: (email) => api.post('/auth/request-reset-otp/', { email }),
+  verifyResetOtp: (email, otp, newPassword) =>
+    api.post('/auth/verify-reset-otp/', { email, otp, new_password: newPassword }),
 };
 
 // ✅ Export the configured instance for internal use

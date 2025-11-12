@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage';
 import AddRecipePage from './pages/AddRecipePage';
 import EditRecipePage from './pages/EditRecipePage';
 import NotificationsPage from './pages/NotificationsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import FavoritesPage from './pages/FavoritesPage';
 
 // ✅ Sub-component that waits until auth is loaded
@@ -41,6 +42,7 @@ function AppContent() {
         <Route path="/recipes/:id" element={<RecipeDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/profile" element={
           <ProtectedRoute>
             <ProfilePage />

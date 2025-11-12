@@ -71,13 +71,16 @@ class RecipeSerializer(serializers.ModelSerializer):
     rating_count = serializers.SerializerMethodField()
     user_rating = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    favorites_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = [
             'id', 'author', 'title', 'description', 'instructions', 'ingredients', 'ingredient_ids',
             'category', 'category_id', 'image', 'created_at',
-            'is_favorite', 'average_rating', 'rating_count', 'user_rating', 'comment_count'
+            'is_favorite', 'average_rating', 'rating_count', 'user_rating',
+            'comment_count', 'comments_count', 'favorites_count'
         ]
         read_only_fields = ['id', 'created_at', 'author']
 
@@ -105,6 +108,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_comment_count(self, obj):
         return obj.comments.count()
+
+    def get_comments_count(self, obj):
+        return self.get_comment_count(obj)
+
+    def get_favorites_count(self, obj):
+        return obj.favorited_by.count()
 
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients", [])

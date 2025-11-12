@@ -1,5 +1,30 @@
 /* Centralized UI styles - modern, light, and accessible */
 
+/* Theme palette */
+:root {
+  --color-bg: #fff7e6;
+  --color-surface: #ffffff;
+  --color-primary: #f4a261;
+  --color-primary-dark: #e76f51;
+  --color-accent: #2a9d8f;
+  --color-accent-soft: #a5d6a7;
+  --color-muted: #6b7280;
+  --color-text: #2f2a26;
+  --shadow-soft: 0 18px 40px rgba(244, 162, 97, 0.16);
+}
+
+body {
+  background: linear-gradient(180deg, #fff9ec 0%, #ffe8cc 45%, #fef3e0 100%);
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-accent);
+}
+a:hover {
+  color: var(--color-primary-dark);
+}
+
 /* Buttons */
 .btn {
   padding: 0.5em 1.1em;
@@ -18,37 +43,63 @@
 }
 
 .btn-primary {
-  background: #ffc600;
-  color: #222;
+  background: var(--color-primary);
+  color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-soft);
+  background: var(--color-primary-dark);
 }
 
 .btn-secondary {
-  background: #e9ecef;
-  color: #333;
+  background: #ffedd5;
+  color: var(--color-text);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #dee2e6;
+  background: #ffe0b2;
   box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 /* Follow button variant */
-.btn-follow {
-  background: #e9ecef;
-  color: #333;
+.toggle-follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45em 1.2em;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.12s ease;
 }
-.btn-follow:hover:not(:disabled) {
-  background: #dee2e6;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.toggle-follow-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
 }
-.btn-follow.is-following {
-  background: #ffc600;
-  color: #222;
+.toggle-follow-btn.is-active {
+  background: var(--color-accent);
 }
-.btn-follow.is-following:hover:not(:disabled) {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+.toggle-follow-btn.is-active:hover:not(:disabled) {
+  box-shadow: 0 12px 24px rgba(42, 157, 143, 0.18);
+}
+
+.favorite-btn {
+  background: rgba(244, 162, 97, 0.16);
+  border: none;
+  color: var(--color-primary-dark);
+  border-radius: 999px;
+  padding: 0.45em 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+.favorite-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+.favorite-btn.active {
+  background: rgba(42, 157, 143, 0.18);
+  color: var(--color-accent);
 }
 
 /* Inputs */
@@ -153,38 +204,44 @@
   top: 0;
   z-index: 50;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: #ffffffcc;
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0.85rem 2.5rem;
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.92) 0%, rgba(244, 162, 97, 0.92) 100%);
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  text-align: center;
 }
 .navbar-logo {
   font-weight: 800;
   letter-spacing: 0.2px;
   text-decoration: none;
-  color: #111827;
+  color: #fff;
 }
 .navbar-links {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
   margin: 0;
   padding: 0;
+  flex-wrap: wrap;
 }
 .navbar a {
   text-decoration: none;
-  color: #374151;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  color: #fff;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  transition: background-color 0.12s ease, color 0.12s ease, transform 0.08s ease;
+  font-weight: 600;
 }
 .navbar a:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transform: translateY(-1px);
 }
 .navbar-notification-link {
   position: relative;
@@ -200,26 +257,31 @@
   padding: 0.05rem 0.35rem;
 }
 .logout-btn {
-  background: transparent;
+  background: rgba(255,255,255,0.18);
   border: none;
-  color: #6b7280;
+  color: #fff;
   cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
 }
 .logout-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(255,255,255,0.28);
+  color: #fff;
 }
 
 /* Forms */
 .recipe-form {
   display: grid;
   gap: 0.9rem;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 1rem;
+  padding: 1.2rem;
+  box-shadow: 0 18px 36px rgba(15, 118, 110, 0.08);
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 .form-group label {
   display: block;
@@ -239,11 +301,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 2px dashed #e5e7eb;
+  border: 2px dashed rgba(42, 157, 143, 0.35);
   border-radius: 10px;
   padding: 1rem;
-  background: #fafafa;
-  color: #6b7280;
+  background: rgba(42, 157, 143, 0.05);
+  color: var(--color-muted);
 }
 .image-dropzone input[type="file"] {
   display: block;
@@ -273,4 +335,172 @@
   object-fit: cover;
 }
 
+.recipe-detail .recipe-meta {
+  text-align: center;
+  color: var(--color-muted);
+}
 
+.recipe-body {
+  width: 100%;
+  max-width: 900px;
+  text-align: left;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Explore search row */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  margin: 0.25rem auto 0.5rem;
+}
+.search-row input {
+  flex: 1;
+  min-width: 150px;
+  max-width: 300px;
+}
+.search-row .btn {
+  min-width: 85px;
+}
+
+/* Auth forms */
+.auth-form {
+  width: 100%;
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 32px 24px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+}
+.auth-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+.auth-form label {
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.auth-form input {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d3d3d3;
+  font-size: 1.05em;
+  background: #f8f9fa;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.auth-form .btn {
+  width: 100%;
+  max-width: 600px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 18px;
+}
+
+.page-container {
+  width: min(1500px, 90vw);
+  margin: 0 auto;
+  padding: 32px 0 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.page-container h2,
+.page-container h3,
+.page-container h4 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.explore-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-select {
+  width: auto;
+  max-width: 220px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid rgba(42, 157, 143, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.55em 0.8em;
+}
+
+.profile-meta {
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.profile-header .toggle-follow-btn {
+  margin-top: 0.75rem;
+}
+
+.stat-pill {
+  background: rgba(244, 162, 97, 0.12);
+  border: 1px solid rgba(244, 162, 97, 0.35);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  min-width: 140px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text);
+}
+.stat-pill strong {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.stat-action {
+  border: none;
+  cursor: pointer;
+  background: rgba(42, 157, 143, 0.14);
+  border: 1px solid rgba(42, 157, 143, 0.35);
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.stat-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(42, 157, 143, 0.15);
+}
+
+/* .recipes-grid {
+  justify-items: center;
+} */
+
+.profile-recipes .empty-list {
+  background: rgba(42, 157, 143, 0.08);
+  color: var(--color-muted);
+}
+
+.google-login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 1.2em 0 1em 0;
+}

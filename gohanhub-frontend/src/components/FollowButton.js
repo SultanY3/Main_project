@@ -55,13 +55,20 @@ const FollowButton = ({ targetUserId, isFollowing: initialFollowing = false, onF
 
   return (
     <button
-      className={`btn btn-follow${isFollowing ? ' is-following' : ''}`}
+      className={`toggle-follow-btn${isFollowing ? ' is-active' : ''}`}
       onClick={handleFollowToggle}
       disabled={loading}
       aria-pressed={isFollowing}
       aria-label={isFollowing ? 'Unfollow user' : 'Follow user'}
     >
-      {loading ? '...' : isFollowing ? 'Unfollow' : 'Follow'}
+      {loading ? (
+        '...'
+      ) : (
+        <>
+          <span aria-hidden="true">{isFollowing ? '🧡' : '➕'}</span>
+          <span>{isFollowing ? 'Unfollow' : 'Follow'}</span>
+        </>
+      )}
     </button>
   );
 };

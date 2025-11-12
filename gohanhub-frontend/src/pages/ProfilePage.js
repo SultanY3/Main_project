@@ -7,10 +7,11 @@ import FollowButton from '../components/FollowButton';
 import FollowersModal from '../components/FollowersModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
+import '../styles/ProfilePage.css';
 
 const ProfilePage = () => {
   const { id } = useParams();
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser, logout, loading: authLoading, isAuthenticated } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [recipes, setRecipes] = useState([]);
@@ -20,18 +21,20 @@ const ProfilePage = () => {
   const [showFollowingModal, setShowFollowingModal] = useState(false);
 
   const isOwnProfile = !id || currentUser?.id === Number(id);
-  const profileId = id || currentUser?.id;
+  const profileId = id || currentUser?.id || currentUser?.pk;
 
   useEffect(() => {
+    if (authLoading) return; // wait until auth resolves
     if (profileId) {
       fetchProfile();
       fetchUserRecipes();
     } else {
-      // Avoid being stuck in loading state if profileId is not yet available
+      // If not authenticated and no route id, avoid spinner lock
       setLoading(false);
     }
     // eslint-disable-next-line
-  }, [profileId]);
+  }, [profileId, authLoading]);
+
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -56,7 +59,11 @@ const ProfilePage = () => {
       const response = await axios.get(`/recipes/`, {
         params: { author: profileId }, // Use 'author' (or 'user') depending on backend param
       });
-      setRecipes(Array.isArray(response.data) ? response.data : response.data.results || []);
+      const raw = Array.isArray(response.data) ? response.data : response.data.results || [];
+      const filtered = profileId
+        ? raw.filter((recipe) => Number(recipe.author?.id) === Number(profileId))
+        : raw;
+      setRecipes(filtered);
     } catch (error) {
       console.error('Failed to fetch user recipes:', error?.response?.data || error.message);
     }
@@ -68,11 +75,15 @@ const ProfilePage = () => {
   if (!profile)
     return <div className="profile-empty">User profile not found.</div>;
 
+  const followerTotal = profile.follower_count ?? profile.followers_count ?? 0;
+  const followingTotal = profile.following_count ?? profile.followers_total ?? 0;
+  const recipeTotal = recipes.length;
+
   return (
-    <div className="profile-page">
+    <div className="profile-page page-container">
       <div className="profile-header">
         {/* Avatar could be added here if present */}
-        <h2>{profile.username}</h2>
+        <h2 className="section-title">{profile.username}</h2>
         <div className="profile-meta">
           <span>{profile.email}</span>
           {profile.first_name && profile.last_name && (
@@ -82,11 +93,11 @@ const ProfilePage = () => {
           )}
         </div>
         {/* Allow logout for own profile */}
-        {isOwnProfile && (
-          <button className="btn logout-btn" onClick={logout}>
-            Logout
-          </button>
-        )}
+        {/* {isOwnProfile && (
+          // <button className="btn logout-btn" onClick={logout}>
+          //   Logout
+          // </button>
+        )} */}
         {!isOwnProfile && currentUser && profile.id !== currentUser.id && (
           <FollowButton
             targetUserId={profile.id}
@@ -95,17 +106,21 @@ const ProfilePage = () => {
           />
         )}
         <div className="profile-stats">
-          <button onClick={() => setShowFollowersModal(true)}>
-            Followers: {profile.follower_count || 0}
+          <button type="button" className="stat-pill stat-action" onClick={() => setShowFollowersModal(true)}>
+            <strong>{followerTotal}</strong> Followers
           </button>
-          <button onClick={() => setShowFollowingModal(true)}>
-            Following: {profile.following_count || 0}
+          <button type="button" className="stat-pill stat-action" onClick={() => setShowFollowingModal(true)}>
+            <strong>{followingTotal}</strong> Following
           </button>
-          <span>Recipes: {profile.recipes_count || recipes.length}</span>
+          <span className="stat-pill">
+            <strong>{recipeTotal}</strong> Recipes
+          </span>
         </div>
       </div>
       <div className="profile-recipes">
-        <h3>{isOwnProfile ? "Your Recipes" : `${profile.username}'s Recipes`}</h3>
+        <h3 className="section-title" style={{ fontSize: '1.6rem' }}>
+          {isOwnProfile ? "Your Recipes" : `${profile.username}'s Recipes`}
+        </h3>
         {recipes.length === 0 ? (
           <div className="empty-list">No recipes found.</div>
         ) : (

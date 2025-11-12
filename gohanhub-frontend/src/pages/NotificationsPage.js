@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { notificationAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
+import '../styles/NotificationsPage.css';
 
 const NotificationsPage = () => {
   const [items, setItems] = useState([]);
@@ -29,8 +30,8 @@ const NotificationsPage = () => {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <div className="notifications-page">
-      <h2>Notifications</h2>
+    <div className="notifications-page page-container">
+      <h2 className="section-title">Notifications</h2>
       {items.length === 0 ? (
         <div className="empty-list">No notifications</div>
       ) : (

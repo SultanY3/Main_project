@@ -44,9 +44,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
-      <h2>Sign In</h2>
-      <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+    <div className="login-page page-container">
+      <h2 className="section-title">Sign In</h2>
+      <form className="login-form auth-form" onSubmit={handleSubmit(onSubmit)}>
         <div className="form-group">
           <label>Email:</label>
           <input
@@ -79,14 +79,18 @@ const LoginPage = () => {
         <button type="submit" className="btn" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
-      </form>
-      <div className="google-login-wrapper" style={{ margin: "1em 0" }}>
+        <div className="google-login-wrapper">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
           width={256}
         />
       </div>
+      <div className="login-forgot" style={{ marginBottom: '0.75rem' }}>
+        <Link to="/forgot-password">Forgot Password?</Link>
+      </div>
+      </form>
+      
       <div className="login-footer">
         Don't have an account?{' '}
         <Link to="/register">Sign up</Link>

@@ -27,8 +27,8 @@ const AddRecipePage = () => {
   };
 
   return (
-    <div className="add-recipe-page">
-      <h2>Add a New Recipe</h2>
+    <div className="add-recipe-page page-container">
+      <h2 className="section-title">Add a New Recipe</h2>
       <RecipeForm onSubmit={handleSubmit} />
     </div>
   );

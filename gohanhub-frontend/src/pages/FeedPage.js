@@ -32,8 +32,8 @@ const FeedPage = () => {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <div className="feed-page">
-      <h2>Your Personalized Feed</h2>
+    <div className="feed-page page-container">
+      <h2 className="section-title">Your Personalized Feed</h2>
       {feed.length === 0 ? (
         <div className="empty-list">Follow some users to see their recipes in your feed.</div>
       ) : (

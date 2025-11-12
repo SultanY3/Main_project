@@ -47,9 +47,9 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="register-page">
-      <h2>Create an Account</h2>
-      <form className="register-form" onSubmit={handleSubmit(onSubmit)}>
+    <div className="register-page page-container">
+      <h2 className="section-title">Create an Account</h2>
+      <form className="register-form auth-form" onSubmit={handleSubmit(onSubmit)}>
         <div className="form-group">
           <label>Username:</label>
           <input

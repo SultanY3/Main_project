@@ -23,11 +23,7 @@ const ExplorePage = () => {
     fetchRecipes();
     // eslint-disable-next-line
   }, []);
-
-  useEffect(() => {
-    fetchRecipes();
-    // eslint-disable-next-line
-  }, [selectedCategory, searchTerm]);
+  // Remove auto-search on change; searching happens only on form submit
 
   const fetchCategories = async () => {
     try {
@@ -45,13 +41,13 @@ const ExplorePage = () => {
     }
   };
 
-  const fetchRecipes = async () => {
+  const fetchRecipes = async (categoryValue = selectedCategory, searchValue = searchTerm) => {
     setLoading(true);
     setError(null);
     try {
       const params = {};
-      if (selectedCategory) params.category = selectedCategory;
-      if (searchTerm) params.search = searchTerm;
+      if (categoryValue) params.category = categoryValue;
+      if (searchValue) params.search = searchValue;
       const response = await axios.get(`/recipes/`, { params });
       setRecipes(extractArray(response.data));
     } catch (error) {
@@ -62,26 +58,40 @@ const ExplorePage = () => {
     }
   };
 
+  const handleCategoryChange = (event) => {
+    const value = event.target.value;
+    setSelectedCategory(value);
+    fetchRecipes(value, searchTerm);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchRecipes();
+  };
+
   return (
-    <div className="explore-page">
-      <h2>Explore Recipes</h2>
+    <div className="explore-page page-container">
+      <h2 className="section-title">Explore Recipes</h2>
       <form
         className="explore-filters"
-        onSubmit={(e) => {
-          e.preventDefault();
-          fetchRecipes();
-        }}
+        onSubmit={handleSearchSubmit}
       >
-        <input
-          type="text"
-          placeholder="Search recipes..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={loading}
-        />
+        <div className="search-row">
+          <input
+            type="text"
+            placeholder="Search recipes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={loading}
+          />
+          <button type="submit" className="btn" disabled={loading}>
+            Search
+          </button>
+        </div>
         <select
+          className="category-select"
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={handleCategoryChange}
           disabled={loading}
         >
           <option value="">All Categories</option>
@@ -91,9 +101,6 @@ const ExplorePage = () => {
             </option>
           ))}
         </select>
-        <button type="submit" className="btn" disabled={loading}>
-          Search
-        </button>
       </form>
       {loading ? (
         <LoadingSpinner />

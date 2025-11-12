@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from drf_yasg.views import get_schema_view
 # from drf_yasg import openapi
 from rest_framework import permissions
-from . import api_views, follow_views
+from . import api_views, follow_views, auth_reset_views
 
 # Swagger/OpenAPI schema
 # schema_view = get_schema_view(
@@ -37,6 +37,8 @@ urlpatterns = [
     # dj-rest-auth user auth and registration endpoints
     path("auth/", include("dj_rest_auth.urls")),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
+    path("auth/request-reset-otp/", auth_reset_views.request_reset_otp, name="request-reset-otp"),
+    path("auth/verify-reset-otp/", auth_reset_views.verify_reset_otp, name="verify-reset-otp"),
 
     # Google OAuth2 login endpoint
     path("auth/google/", api_views.GoogleLogin.as_view(), name="google-login"),

@@ -54,8 +54,8 @@ const EditRecipePage = () => {
   if (!recipe) return <div className="edit-empty">Recipe not found.</div>;
 
   return (
-    <div className="edit-recipe-page">
-      <h2>Edit Recipe</h2>
+    <div className="edit-recipe-page page-container">
+      <h2 className="section-title">Edit Recipe</h2>
       <RecipeForm initialData={recipe} onSubmit={handleSubmit} />
     </div>
   );

@@ -8,6 +8,8 @@ const RecipeCard = ({ recipe }) => {
     recipe.author_username ||
     recipe.author_name ||
     'Unknown';
+  const favoritesCount = recipe.favorites_count ?? recipe.favorite_count ?? recipe.likes_count ?? 0;
+  const commentsCount = recipe.comment_count ?? recipe.comments_count ?? 0;
   return (
     <div className="recipe-card">
       <Link to={`/recipes/${recipe.id}`}>
@@ -19,11 +21,11 @@ const RecipeCard = ({ recipe }) => {
           {recipe.category && <span className="card-category">{recipe.category.name || recipe.category}</span>}
         </div>
         <div className="card-body">
-          <p>
+          {/* <p>
             {recipe.description
               ? recipe.description.substring(0, 100) + (recipe.description.length > 100 ? '...' : '')
               : 'No description provided.'}
-          </p>
+          </p> */}
         </div>
       </Link>
       <div className="card-meta">
@@ -35,8 +37,8 @@ const RecipeCard = ({ recipe }) => {
         </span>
       </div>
       <div className="card-stats">
-        <span title="Favorites">★ {recipe.favorites_count || 0}</span>
-        <span title="Comments">💬 {recipe.comments_count || 0}</span>
+        <span title="Favorites">★ {favoritesCount}</span>
+        <span title="Comments">💬 {commentsCount}</span>
         <span title="Avg Rating">⭐ {recipe.average_rating ? recipe.average_rating.toFixed(1) : '-'}</span>
       </div>
     </div>

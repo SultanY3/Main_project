@@ -91,13 +91,14 @@ const RecipeDetailPage = () => {
 
   const canEdit = user && recipe.author?.id === user.id;
   const imageUrl = recipe.image || 'https://via.placeholder.com/1200x600?text=Recipe+Image';
+  const favoritesCount = recipe.favorites_count ?? recipe.favorite_count ?? recipe.likes_count ?? 0;
 
   return (
-    <div className="recipe-detail">
+    <div className="recipe-detail page-container">
       <div className="recipe-hero">
         <img src={imageUrl} alt={recipe.title} className="recipe-hero-img" />
       </div>
-      <h2>{recipe.title}</h2>
+      <h2 className="section-title">{recipe.title}</h2>
       <div className="recipe-meta">
         <span>
           By{' '}
@@ -140,7 +141,7 @@ const RecipeDetailPage = () => {
           >
             {isFavorite ? '★ Favorited' : '☆ Favorite'}
           </button>
-          <span>Favorites: {recipe.favorites_count || 0}</span>
+          <span>Favorites: {favoritesCount}</span>
         </div>
         <div className="rating-section">
           <RatingStars
