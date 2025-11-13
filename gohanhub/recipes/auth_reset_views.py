@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 import random
+from django.conf import settings
 
 OTP_TTL_SECONDS = 15 * 60  # 15 minutes
 
@@ -36,7 +37,7 @@ def request_reset_otp(request):
     send_mail(
       subject="Your Password Reset Code",
       message=f"Your OTP code is: {code}. It expires in 15 minutes.",
-      from_email=None,
+      from_email=settings.DEFAULT_FROM_EMAIL,
       recipient_list=[email],
       fail_silently=True,
     )

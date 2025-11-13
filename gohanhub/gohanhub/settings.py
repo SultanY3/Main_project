@@ -99,7 +99,10 @@ USE_I18N = True
 USE_TZ = True
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -135,7 +138,7 @@ REST_FRAMEWORK = {
 # django-allauth Configuration (v0.50+ dictionary format)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 
-ACCOUNT_LOGIN_METHODS = ['email']  
+ACCOUNT_LOGIN_METHOD = 'email'  
 
 ACCOUNT_SIGNUP_FIELDS = {
     "username": {"required": True, "min_length": 3, "max_length": 150},  # Or False
@@ -148,6 +151,10 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
 
+GOOGLE_OAUTH_CALLBACK_URL = os.environ.get(
+    'GOOGLE_OAUTH_CALLBACK_URL',
+    'http://localhost:3000/auth/google/callback'
+)
 
 
 # dj-rest-auth Configuration

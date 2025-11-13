@@ -13,6 +13,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.cache import cache
 import requests
+from django.db.models import Avg, Value, FloatField
 
 # ------------ Permissions -----------
 
@@ -137,14 +138,14 @@ class PersonalizedFeedView(generics.ListAPIView):
         return Recipe.objects.filter(author__in=following_users).annotate(
             likes_count=Count("favorited_by", distinct=True),
             comments_count=Count("comments", distinct=True),
-            avg_rating=Value(0.0, output_field=FloatField()),  # Use actual avg if needed
-        ).order_by('-created_at', '-id')
+            avg_rating=Avg('ratings__rating', output_field=FloatField()),  # ✅ CORRECT
+    ).order_by('-created_at', '-id')
 
 class ListNotificationsView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        notifications = recent_notifications_for_user(request.user, hours=1)
+        notifications = recent_notifications_for_user(request.user, hours=24)
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
 
@@ -164,7 +165,14 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
-    callback_url = None
+    
+    @property
+    def callback_url(self):
+        from django.conf import settings
+        if hasattr(settings, 'GOOGLE_OAUTH_CALLBACK_URL'):
+            return settings.GOOGLE_OAUTH_CALLBACK_URL
+        return 'http://localhost:3000/auth/google/callback'  # ✅ CORRECT
+
 
 class ChatbotView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]

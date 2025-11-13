@@ -25,6 +25,11 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     favorited_by = models.ManyToManyField(User, through='Favorite', related_name='favorite_recipes')
 
+    class Meta:  
+        indexes = [
+            models.Index(fields=['-created_at']),
+        ]
+
     def __str__(self):
         return self.title
 

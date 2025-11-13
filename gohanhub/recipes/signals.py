@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .email_utils import send_welcome_email  # Adjust import as per your project structure
+from recipes.notifications.email_utils import send_welcome_email  # Adjust import as per your project structure
 
 User = get_user_model()
 
