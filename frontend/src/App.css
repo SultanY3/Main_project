@@ -1,0 +1,28 @@
+/* src/App.css */
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left; /* Resets the default centered text */
+}
+
+/* Ensure the body takes full width */
+body {
+  min-width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  background-color: #f8f9fa; /* Matches Bootstrap's light gray bg */
+  overflow-x: hidden; /* Prevents horizontal scrollbar */
+}
+
+/* Helper for recipe cards to ensure consistent image sizing */
+.card-img-top {
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Optional: Add some spacing for the main container if not using Bootstrap classes */
+.main-container {
+  padding: 2rem;
+}

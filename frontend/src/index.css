@@ -1,0 +1,32 @@
+/* src/index.css */
+
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  /* Optional: Set base colors if not using Bootstrap defaults */
+  color: #212529;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  /* ✅ FIX: Removed 'display: flex' and 'place-items: center' */
+  display: block; 
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  color: inherit; 
+}
+
+button {
+  cursor: pointer;
+}
