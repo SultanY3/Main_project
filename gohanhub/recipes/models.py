@@ -65,3 +65,35 @@ class Follow(models.Model):
 
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
+    
+class Notification(models.Model):
+    TYPES = [
+        ('like', 'Like'),
+        ('comment', 'Comment'),
+        ('follow', 'Follow')
+    ]
+
+    recipient = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
+    actor = models.ForeignKey(User, related_name='actions', on_delete=models.CASCADE)
+    type = models.CharField(choices=TYPES, max_length=20)
+    
+    # Optional: Link to a recipe if relevant (Follows won't have this)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, null=True, blank=True)
+    
+    text = models.CharField(max_length=255) # e.g., "John liked your Pizza"
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notify {self.recipient.username}: {self.text}"
+    
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.otp}"

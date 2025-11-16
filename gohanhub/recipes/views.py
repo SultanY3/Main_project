@@ -2,10 +2,20 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q, Count
-from .models import Recipe, Category, Favorite, Ingredient, Comment, Rating, Follow
-from .serializers import RecipeSerializer, CategorySerializer, UserSerializer, AdminUserListSerializer, CommentSerializer
+from .models import Recipe, Category, Favorite, Ingredient, Comment, Rating, Follow, Notification, PasswordResetOTP
+from .serializers import RecipeSerializer, CategorySerializer, UserSerializer, AdminUserListSerializer, CommentSerializer, NotificationSerializer
 from django.contrib.auth.models import User
 from .permissions import IsAuthorOrAdminOrReadOnly
+from django.core.mail import send_mail
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework_simplejwt.tokens import RefreshToken
+import google.generativeai as genai
+import random
+from django.utils import timezone
+from datetime import timedelta
+
 
 # Handles Recipes (List, Create, Update, Delete)
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -34,10 +44,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         recipe = self.get_object()
         obj, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
-        if not created:
+        
+        if created:
+            # ✅ Create Notification (only if not liking own recipe)
+            if recipe.author != request.user:
+                Notification.objects.create(
+                    recipient=recipe.author,
+                    actor=request.user,
+                    type='like',
+                    recipe=recipe,
+                    text=f"{request.user.username} liked your recipe {recipe.title}"
+                )
+            return Response({'status': 'added'})
+        else:
             obj.delete()
             return Response({'status': 'removed'})
-        return Response({'status': 'added'})
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
@@ -48,9 +69,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def comment(self, request, pk=None):
         recipe = self.get_object()
+        # Note: We import CommentSerializer inside to avoid circular imports if necessary, 
+        # or ensure it's imported at the top
+        from .serializers import CommentSerializer 
+        
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, recipe=recipe)
+            
+            # ✅ Create Notification
+            if recipe.author != request.user:
+                Notification.objects.create(
+                    recipient=recipe.author,
+                    actor=request.user,
+                    type='comment',
+                    recipe=recipe,
+                    text=f"{request.user.username} commented on {recipe.title}"
+                )
+            
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
 
@@ -81,16 +117,48 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 @permission_classes([permissions.AllowAny])
 def register(request):
     data = request.data
-    if User.objects.filter(username=data.get('username')).exists():
-        return Response({'error': 'Username exists'}, status=400)
     
+    # --- Validation ---
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not all([username, email, password]):
+        return Response({'error': 'Username, email, and password are required.'}, status=400)
+    
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username exists'}, status=400)
+    if User.objects.filter(email=email).exists():
+        return Response({'error': 'Email exists'}, status=400)
+    
+    # --- Create User ---
     user = User.objects.create_user(
-        username=data['username'],
-        email=data.get('email'),
-        password=data['password'],
-        first_name=data.get('first_name'),
-        last_name=data.get('last_name')
+        username=username,
+        email=email,
+        password=password,
+        first_name=data.get('first_name', ''),
+        last_name=data.get('last_name', '')
     )
+    
+    # --- ✅ Send Welcome Email ---
+    try:
+        subject = 'Welcome to GohanHub!'
+        message = f'Hi {user.first_name},\n\n' \
+                  f'Thank you for registering at GohanHub. We are excited to have you join our community of food lovers!\n\n' \
+                  f'Happy cooking,\n' \
+                  f'The GohanHub Team'
+        
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [user.email]
+        
+        send_mail(subject, message, from_email, recipient_list)
+    
+    except Exception as e:
+        # We don't want the app to crash if the email fails
+        # Log the error to your console
+        print(f"Error sending welcome email to {user.email}: {e}")
+    # --- End Email Code ---
+    
     return Response(UserSerializer(user).data)
 
 # Handles "My Favorites" list
@@ -133,19 +201,43 @@ class PublicUserViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def follow(self, request, pk=None):
         target_user = self.get_object()
-        
-        # Prevent self-following
         if request.user == target_user:
             return Response({'error': 'You cannot follow yourself'}, status=400)
         
-        # Toggle Follow
         obj, created = Follow.objects.get_or_create(follower=request.user, following=target_user)
-        if not created:
+        
+        if created:
+            # ✅ Create Notification
+            Notification.objects.create(
+                recipient=target_user,
+                actor=request.user,
+                type='follow',
+                text=f"{request.user.username} started following you"
+            )
+            return Response({'status': 'followed'})
+        else:
             obj.delete()
             return Response({'status': 'unfollowed'})
-        
-        return Response({'status': 'followed'})
-    
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def read_all(self, request):
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return Response({'status': 'all marked as read'})
+     
 # Handles Admin-specific actions
 class AdminDashboardViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAdminUser]
@@ -177,3 +269,152 @@ class AdminDashboardViewSet(viewsets.ViewSet):
         # Pass context for the serializer
         serializer = RecipeSerializer(recipes, many=True, context={'request': request})       
         return Response(serializer.data)
+    
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def google_login(request):
+    token = request.data.get('token')
+    if not token:
+        return Response({'error': 'No token provided'}, status=400)
+
+    try:
+        # 1. Verify the token with Google
+        CLIENT_ID = "493280394224-k31td9mqg6d02b9db56dbdopp4ngml89.apps.googleusercontent.com" 
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), CLIENT_ID)
+
+        # 2. Get user info
+        email = idinfo['email']
+        first_name = idinfo.get('given_name', '')
+        last_name = idinfo.get('family_name', '')
+        username = email.split('@')[0] # Use part of email as username
+
+        # 3. Check if user exists, or create one
+        user, created = User.objects.get_or_create(
+            email=email, 
+            defaults={
+                'username': username,
+                'first_name': first_name,
+                'last_name': last_name,
+            }
+        )
+
+        # 4. Generate JWT Tokens manually
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data
+        })
+
+    except ValueError:
+        return Response({'error': 'Invalid Google token'}, status=400)
+    
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def forgot_password(request):
+    email = request.data.get('email')
+    if not email:
+        return Response({'error': 'Email is required'}, status=400)
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        # Generate 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # Save to DB (Clear old OTPs first)
+        PasswordResetOTP.objects.filter(user=user).delete()
+        PasswordResetOTP.objects.create(user=user, otp=otp)
+        
+        # Send Email
+        send_mail(
+            'Password Reset OTP',
+            f'Your OTP for password reset is: {otp}',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        
+        return Response({'status': 'OTP sent'})
+    
+    except User.DoesNotExist:
+        # Security: Don't reveal if user exists or not
+        return Response({'status': 'OTP sent'}) 
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def verify_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+    
+    try:
+        user = User.objects.get(email=email)
+        record = PasswordResetOTP.objects.filter(user=user, otp=otp).first()
+        
+        if not record:
+            return Response({'error': 'Invalid OTP'}, status=400)
+        
+        # Check if expired (e.g., 10 mins)
+        if timezone.now() > record.created_at + timedelta(minutes=10):
+            return Response({'error': 'OTP expired'}, status=400)
+            
+        return Response({'status': 'OTP verified'})
+        
+    except User.DoesNotExist:
+        return Response({'error': 'Invalid request'}, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def reset_password(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+    new_password = request.data.get('new_password')
+    
+    try:
+        user = User.objects.get(email=email)
+        record = PasswordResetOTP.objects.filter(user=user, otp=otp).first()
+        
+        if not record:
+            return Response({'error': 'Invalid OTP'}, status=400)
+            
+        if timezone.now() > record.created_at + timedelta(minutes=10):
+            return Response({'error': 'OTP expired'}, status=400)
+        
+        # Reset Password
+        user.set_password(new_password)
+        user.save()
+        
+        # Clean up used OTP
+        record.delete()
+        
+        return Response({'status': 'Password reset successful'})
+        
+    except User.DoesNotExist:
+        return Response({'error': 'Invalid request'}, status=400)
+    
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny]) # Allow guests to use it too? Or change to IsAuthenticated
+def ai_chat(request):
+    user_message = request.data.get('message')
+    if not user_message:
+        return Response({'error': 'Message is required'}, status=400)
+
+    try:
+        # Configure the API
+        #  SECURITY : In production, use os.environ.get('GEMINI_API_KEY')
+        genai.configure(api_key="AIzaSyD9RrhPF_Mpt1Tbk7JTP1xJmoYo5S25LVw") 
+        
+        # Initialize Model
+        model = genai.GenerativeModel('models/gemini-flash-latest')        
+        # Add a system instruction context manually
+        prompt = f"You are a helpful cooking assistant named GohanBot. Answer this cooking question: {user_message}"
+        
+        response = model.generate_content(prompt)
+        
+        return Response({'response': response.text})
+    except Exception as e:
+        print("Gemini Error:", e)
+        return Response({'error': str(e)}, status=500)

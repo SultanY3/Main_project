@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Recipe, Category, Ingredient, Favorite, Comment, Rating, Follow
+from .models import Recipe, Category, Ingredient, Favorite, Comment, Rating, Follow, Notification
 from django.db.models import Avg
 
 class AdminUserListSerializer(serializers.ModelSerializer):
@@ -10,6 +10,14 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'recipe_count']
 
+class NotificationSerializer(serializers.ModelSerializer):
+    actor_name = serializers.ReadOnlyField(source='actor.username')
+    recipe_title = serializers.ReadOnlyField(source='recipe.title')
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'type', 'actor_name', 'recipe_title', 'text', 'is_read', 'created_at']
+        
 class UserSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()

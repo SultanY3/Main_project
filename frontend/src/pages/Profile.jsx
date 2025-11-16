@@ -7,13 +7,22 @@ function Profile() {
     const [user, setUser] = useState(null);
     const [editing, setEditing] = useState(false);
 
-    // Helper state for the edit form
+    // Form data state
     const [editData, setEditData] = useState({
         first_name: "", last_name: "", email: ""
     });
 
+    // ✅ State for silent messages (No alerts)
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const clearMessages = () => {
+        setError("");
+        setSuccess("");
+    };
+
     useEffect(() => {
-        // 1. Fetch User Details (includes follower counts now)
+        // 1. Fetch User Details
         api.get("user/me/").then(res => {
             setUser(res.data);
             setEditData({
@@ -29,18 +38,24 @@ function Profile() {
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
+        clearMessages();
         try {
             const res = await api.put("user/me/", editData);
-            setUser(res.data); // Update local display
-            alert("Profile updated!");
+            setUser(res.data); // Update local user data
+            
+            // ✅ Show success message instead of alert
+            setSuccess("Profile updated successfully!");
+            setTimeout(() => setSuccess(""), 3000); // Fade out after 3s
+            
             setEditing(false);
         } catch (err) {
-            alert("Error updating profile.");
+            setError("Error updating profile. Please check your inputs.");
         }
     };
 
     const handleDeleteRecipe = (id) => {
-        if(window.confirm("Delete this recipe?")) {
+        // confirm() is a standard safety check, usually acceptable to keep
+        if(window.confirm("Are you sure you want to delete this recipe?")) {
             api.delete(`recipes/${id}/`).then(() => {
                 setRecipes(recipes.filter(r => r.id !== id));
             });
@@ -56,10 +71,14 @@ function Profile() {
                 <div className="col-md-4 mb-4">
                     <div className="card shadow-sm">
                         <div className="card-body text-center">
+                            
+                            {/* ✅ Success/Error Messages */}
+                            {success && <div className="alert alert-success py-2 small">{success}</div>}
+                            
                             <h3 className="mb-1">{user.first_name} {user.last_name}</h3>
                             <p className="text-muted mb-3">@{user.username}</p>
 
-                            {/* ✅ NEW: Social Stats Row */}
+                            {/* Stats Row */}
                             <div className="d-flex justify-content-center gap-4 mb-4 border-top border-bottom py-3">
                                 <div>
                                     <h5 className="mb-0 fw-bold">{recipes.length}</h5>
@@ -78,30 +97,34 @@ function Profile() {
                             {!editing ? (
                                 <div>
                                     <p><strong>Email:</strong> {user.email}</p>
-                                    <button onClick={() => setEditing(true)} className="btn btn-outline-primary w-100">
+                                    <button onClick={() => { setEditing(true); clearMessages(); }} className="btn btn-outline-primary w-100">
                                         Edit Profile
                                     </button>
                                 </div>
                             ) : (
                                 <form onSubmit={handleUpdateUser} className="text-start">
+                                    
+                                    {/* ✅ Inline Error */}
+                                    {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
                                     <div className="mb-2">
                                         <label>First Name</label>
                                         <input className="form-control" value={editData.first_name} 
-                                            onChange={e => setEditData({...editData, first_name: e.target.value})} />
+                                            onChange={e => { setEditData({...editData, first_name: e.target.value}); clearMessages(); }} />
                                     </div>
                                     <div className="mb-2">
                                         <label>Last Name</label>
                                         <input className="form-control" value={editData.last_name} 
-                                            onChange={e => setEditData({...editData, last_name: e.target.value})} />
+                                            onChange={e => { setEditData({...editData, last_name: e.target.value}); clearMessages(); }} />
                                     </div>
                                     <div className="mb-2">
                                         <label>Email</label>
                                         <input className="form-control" value={editData.email} 
-                                            onChange={e => setEditData({...editData, email: e.target.value})} />
+                                            onChange={e => { setEditData({...editData, email: e.target.value}); clearMessages(); }} />
                                     </div>
                                     <div className="d-flex gap-2">
                                         <button type="submit" className="btn btn-success flex-grow-1">Save</button>
-                                        <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary">Cancel</button>
+                                        <button type="button" onClick={() => { setEditing(false); clearMessages(); }} className="btn btn-secondary">Cancel</button>
                                     </div>
                                 </form>
                             )}
@@ -130,9 +153,9 @@ function Profile() {
                                     <div className="card-body">
                                         <h5 className="card-title text-truncate">{recipe.title}</h5>
                                         
-                                        {/* ✅ NEW: Card Stats (Stars, Likes, Comments) */}
+                                        {/* Card Stats */}
                                         <div className="d-flex gap-3 text-muted small mb-3">
-                                            <span><i className="bi bi-star-fill text-warning"></i> {recipe.average_rating.toFixed(1)}</span>
+                                            <span><i className="bi bi-star-fill text-warning"></i> {recipe.average_rating ? recipe.average_rating.toFixed(1) : "0.0"}</span>
                                             <span><i className="bi bi-heart-fill text-danger"></i> {recipe.likes_count}</span>
                                             <span><i className="bi bi-chat-fill text-primary"></i> {recipe.comments_count}</span>
                                         </div>

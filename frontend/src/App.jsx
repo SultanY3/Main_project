@@ -12,6 +12,8 @@ import AdminRecipes from "./pages/AdminRecipes";
 import AdminHome from "./pages/AdminHome"; 
 import AdminRoute from "./components/AdminRoute";
 import Favorites from "./pages/Favorites";
+import ForgotPassword from "./pages/ForgotPassword";
+import Chatbot from "./components/Chatbot";
 
 function ProtectedRoute({ children }) {
   const isAuth = !!localStorage.getItem("access");
@@ -27,6 +29,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
 
         {/* User Protected Routes */}
@@ -56,6 +59,9 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
+      <Chatbot />
+      
     </BrowserRouter>
   );
 }

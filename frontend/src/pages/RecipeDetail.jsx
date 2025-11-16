@@ -3,8 +3,6 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../api";
 
 // --- Helper Components for Stars ---
-
-// 1. Component to DISPLAY stars
 const DisplayStars = ({ rating }) => {
     const totalStars = 5;
     const fullStars = Math.floor(rating);
@@ -25,7 +23,6 @@ const DisplayStars = ({ rating }) => {
     );
 };
 
-// 2. Component for star RATING INPUT
 const RatingInput = ({ currentRating, onRatingSubmit }) => {
     const [hoverRating, setHoverRating] = useState(0);
     const [selectedRating, setSelectedRating] = useState(currentRating);
@@ -54,7 +51,7 @@ const RatingInput = ({ currentRating, onRatingSubmit }) => {
     );
 };
 
-// --- Main Recipe Detail Component ---
+// --- Main Component ---
 
 function RecipeDetail() {
     const { id } = useParams();
@@ -72,7 +69,7 @@ function RecipeDetail() {
                 setRecipe(res.data);
                 setIsFav(res.data.is_favorite);
            })
-           .catch(err => console.error("Error fetching recipe:", err));
+           .catch(err => console.error("Error fetching recipe"));
     };
 
     useEffect(() => {
@@ -87,9 +84,12 @@ function RecipeDetail() {
 
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to delete this recipe?")) {
-            await api.delete(`recipes/${id}/`);
-            alert("Recipe deleted!");
-            navigate("/");
+            try {
+                await api.delete(`recipes/${id}/`);
+                navigate("/"); // ✅ Redirect silently
+            } catch (err) {
+                console.error("Delete failed");
+            }
         }
     };
 
@@ -102,38 +102,34 @@ function RecipeDetail() {
             setNewComment(""); 
             fetchRecipe(); 
         } catch (err) {
-            alert("Error posting comment.");
+            console.error("Comment failed");
         }
     };
 
     const handleRatingSubmit = async (score) => {
         try {
             await api.post(`recipes/${id}/rate/`, { score: score });
-            alert("Thanks for rating!");
-            fetchRecipe(); 
+            fetchRecipe(); // ✅ Update stars silently
         } catch (err) {
-            alert("Error submitting rating.");
+            console.error("Rating failed");
         }
     };
 
-    // ✅ --- NEW FOLLOW HANDLER (NO POPUP) ---
     const handleFollowToggle = () => {
         api.post(`users/${recipe.author.id}/follow/`)
            .then(res => {
-                // Update the recipe state locally
                 setRecipe(prevRecipe => ({
                     ...prevRecipe,
                     author: {
                         ...prevRecipe.author,
                         is_following: res.data.status === 'followed',
-                        // Update follower count based on response
                         followers_count: res.data.status === 'followed'
                             ? prevRecipe.author.followers_count + 1
                             : prevRecipe.author.followers_count - 1
                     }
                 }));
            })
-           .catch(err => alert("Error following user"));
+           .catch(err => console.error("Follow failed"));
     };
 
     if (!recipe) return <div>Loading...</div>;
@@ -146,7 +142,6 @@ function RecipeDetail() {
         <div className="container mt-4">
             <div className="row">
                 <div className="col-lg-10 mx-auto">
-                    {/* --- HEADER --- */}
                     <h1 className="mb-2">{recipe.title}</h1>
                     
                     <div className="d-flex align-items-center mb-3">
@@ -154,10 +149,9 @@ function RecipeDetail() {
                             By <span className="fw-bold text-dark">{recipe.author.username}</span>
                         </p>
                         
-                        {/* ✅ UPDATED FOLLOW BUTTON */}
                         {currentUser && currentUser.username !== recipe.author.username && (
                             <button 
-                                onClick={handleFollowToggle} // Use the new handler
+                                onClick={handleFollowToggle} 
                                 className={`btn btn-sm ${recipe.author.is_following ? 'btn-secondary' : 'btn-primary'}`}
                             >
                                 {recipe.author.is_following ? 'Unfollow' : 'Follow'}
@@ -165,7 +159,6 @@ function RecipeDetail() {
                         )}
                     </div>
                     
-                    {/* --- STAR RATING DISPLAY --- */}
                     <div className="mb-3 d-flex align-items-center gap-2">
                         <DisplayStars rating={recipe.average_rating} />
                         <span className="text-muted">({recipe.rating_count} ratings)</span>
@@ -180,7 +173,6 @@ function RecipeDetail() {
                         />
                     )}
                     
-                    {/* --- ACTION BUTTONS --- */}
                     <div className="mb-4 d-flex gap-2">
                         <button 
                             onClick={toggleFav} 
@@ -197,7 +189,6 @@ function RecipeDetail() {
                         )}
                     </div>
 
-                    {/* --- DESCRIPTION & INGREDIENTS --- */}
                     <p className="lead text-muted mb-4">{recipe.description}</p>
                     <div className="row mt-4">
                         <div className="col-md-5 mb-4">
@@ -220,7 +211,6 @@ function RecipeDetail() {
 
                     <hr className="my-5" />
 
-                    {/* --- RATINGS & COMMENTS SECTION --- */}
                     <div className="row">
                         <div className="col-md-6 mb-4">
                             <h4>Rate this Recipe</h4>
@@ -244,7 +234,6 @@ function RecipeDetail() {
                         </div>
                     </div>
 
-                    {/* --- COMMENT LIST --- */}
                     <div className="mt-5">
                         <h3 className="mb-4">Comments ({recipe.comments.length})</h3>
                         {recipe.comments.length > 0 ? (
