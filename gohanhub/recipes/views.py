@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q, Count
-from .models import Recipe, Category, Favorite, Ingredient, Comment, Rating, Follow, Notification, PasswordResetOTP
+from .models import Recipe, Category, Favorite, Ingredient, Comment, Rating, Follow, Notification, PasswordResetOTP, Like
 from .serializers import RecipeSerializer, CategorySerializer, UserSerializer, AdminUserListSerializer, CommentSerializer, NotificationSerializer
 from django.contrib.auth.models import User
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -39,14 +39,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # This provides the context for the 'is_favorite' field
     def get_serializer_context(self):
         return {'request': self.request}
-
+    
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def favorite(self, request, pk=None):
+    def like(self, request, pk=None):
         recipe = self.get_object()
-        obj, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+        obj, created = Like.objects.get_or_create(user=request.user, recipe=recipe)
         
         if created:
-            # ✅ Create Notification (only if not liking own recipe)
+            # Create Notification (only if not liking own recipe)
             if recipe.author != request.user:
                 Notification.objects.create(
                     recipient=recipe.author,
@@ -55,7 +55,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     recipe=recipe,
                     text=f"{request.user.username} liked your recipe {recipe.title}"
                 )
-            return Response({'status': 'added'})
+            return Response({'status': 'liked'})
+        else:
+            obj.delete()
+            return Response({'status': 'unliked'})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def favorite(self, request, pk=None):
+        recipe = self.get_object()
+        obj, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+        
+        if created:
+            return Response({'status': 'added'}) # 'added' to favorites
         else:
             obj.delete()
             return Response({'status': 'removed'})

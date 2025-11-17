@@ -1,53 +1,106 @@
 import { useState, useEffect } from "react";
 import api from "../api";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 function Home() {
     const [recipes, setRecipes] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [search, setSearch] = useState("");
+    
+    // Get URL search params
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // This state is just for the <input> box
+    const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
 
     useEffect(() => {
         getRecipes();
         getCategories();
-    }, []);
 
-    const getRecipes = (cat = "") => {
-        let url = `recipes/`;
-        if (search) url += `?search=${search}`;
-        if (cat) url += url.includes('?') ? `&category=${cat}` : `?category=${cat}`;
+        setSearchInput(searchParams.get("search") || "");
         
-        api.get(url).then((res) => setRecipes(res.data))
-            .catch((err) => console.error(err));
+    }, [searchParams]);
+
+    const getRecipes = () => {
+        const category = searchParams.get("category");
+        const search = searchParams.get("search");
+
+        let url = `recipes/`;
+        const params = new URLSearchParams();
+
+        if (search) {
+            params.append("search", search);
+        }
+        if (category) {
+            params.append("category", category);
+        }
+
+        api.get(`${url}?${params.toString()}`)
+           .then((res) => setRecipes(res.data))
+           .catch((err) => console.error(err));
     };
 
     const getCategories = () => {
         api.get("categories/").then((res) => setCategories(res.data));
     };
 
+    // --- HANDLERS ---
+    
+    // This function updates the search param
+    const handleSearch = (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams(searchParams);
+        if (searchInput) {
+            params.set("search", searchInput);
+        } else {
+            params.delete("search");
+        }
+        setSearchParams(params);
+    };
+    
+    // This function updates the category param
+    const handleCategoryClick = (catName) => {
+        const params = new URLSearchParams(searchParams);
+        params.set("category", catName);
+        setSearchParams(params);
+    };
+
+    // ✅ FIXED: This function now ONLY removes the category param
+    const handleAllCategory = () => {
+        const params = new URLSearchParams(searchParams);
+        params.delete("category"); // Keep other params like 'search'
+        setSearchParams(params);
+    };
+
     return (
         <div className="container mt-4">
-            {/* Search & Filter */}
-            <div className="mb-4 d-flex gap-2">
+            {/* Search & Filter Section */}
+            <form className="mb-4 d-flex gap-2" onSubmit={handleSearch}>
                 <input 
                     className="form-control"
                     placeholder="Search recipes..." 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                 />
-                <button className="btn btn-primary" onClick={() => getRecipes()}>Search</button>
-            </div>
+                <button className="btn btn-primary" type="submit">Search</button>
+            </form>
+            
             <div className="mb-4 d-flex flex-wrap gap-2">
-                <button className="btn btn-secondary" onClick={() => getRecipes()}>All</button>
+                {/* ✅ This button now calls the corrected function */}
+                <button className="btn btn-secondary" onClick={handleAllCategory}>
+                    All
+                </button>
                 {categories.map(cat => (
-                    <button key={cat.id} className="btn btn-outline-success" 
-                            onClick={() => getRecipes(cat.name)}>
+                    <button 
+                        key={cat.id} 
+                        className="btn btn-outline-success" 
+                        onClick={() => handleCategoryClick(cat.name)}
+                    >
                         {cat.name}
                     </button>
                 ))}
             </div>
 
-            {/* Recipe Grid */}
+            {/* Recipe Grid (No changes) */}
             <div className="row g-4">
                 {recipes.map((recipe) => (
                     <div className="col-lg-4 col-md-6" key={recipe.id}>
@@ -72,7 +125,6 @@ function Home() {
                                     {recipe.description.substring(0, 80)}...
                                 </p>
 
-                                {/* ✅ NEW: Social Stats Row */}
                                 <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                                     <div className="d-flex gap-3 text-muted small">
                                         <span title="Rating">

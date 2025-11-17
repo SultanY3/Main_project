@@ -57,7 +57,7 @@ function RecipeDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [recipe, setRecipe] = useState(null);
-    const [isFav, setIsFav] = useState(false);
+    const [isFav, setIsFav] = useState(false); // This now tracks "is_SAVED"
     const [newComment, setNewComment] = useState(""); 
     
     const userStr = localStorage.getItem("user");
@@ -67,7 +67,7 @@ function RecipeDetail() {
         api.get(`recipes/${id}/`)
            .then(res => {
                 setRecipe(res.data);
-                setIsFav(res.data.is_favorite);
+                setIsFav(res.data.is_favorite); // Tracks "is_SAVED"
            })
            .catch(err => console.error("Error fetching recipe"));
     };
@@ -76,17 +76,33 @@ function RecipeDetail() {
         fetchRecipe();
     }, [id]);
 
+    // This is now for SAVING (Bookmark)
     const toggleFav = () => {
         api.post(`recipes/${id}/favorite/`).then(res => {
             setIsFav(res.data.status === 'added');
         });
     };
 
+    // ✅ NEW: Handle LIKING (Heart)
+    const handleLikeToggle = () => {
+        api.post(`recipes/${id}/like/`)
+           .then(res => {
+                // Update state locally for instant UI feedback
+                setRecipe(prev => ({
+                    ...prev,
+                    is_liked: res.data.status === 'liked',
+                    likes_count: res.data.status === 'liked' 
+                        ? prev.likes_count + 1 
+                        : prev.likes_count - 1
+                }));
+           });
+    };
+
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to delete this recipe?")) {
             try {
                 await api.delete(`recipes/${id}/`);
-                navigate("/"); // ✅ Redirect silently
+                navigate("/");
             } catch (err) {
                 console.error("Delete failed");
             }
@@ -109,7 +125,7 @@ function RecipeDetail() {
     const handleRatingSubmit = async (score) => {
         try {
             await api.post(`recipes/${id}/rate/`, { score: score });
-            fetchRecipe(); // ✅ Update stars silently
+            fetchRecipe();
         } catch (err) {
             console.error("Rating failed");
         }
@@ -132,7 +148,7 @@ function RecipeDetail() {
            .catch(err => console.error("Follow failed"));
     };
 
-    if (!recipe) return <div>Loading...</div>;
+    if (!recipe) return <div className="text-center mt-5">Loading...</div>;
 
     const isOwnerOrAdmin = currentUser && (
         currentUser.username === recipe.author.username || currentUser.is_superuser
@@ -173,18 +189,29 @@ function RecipeDetail() {
                         />
                     )}
                     
+                    {/* ✅ UPDATED ACTION BUTTONS */}
                     <div className="mb-4 d-flex gap-2">
+                        {/* 1. Like Button (Heart) */}
+                        <button 
+                            onClick={handleLikeToggle} 
+                            className={`btn ${recipe.is_liked ? 'btn-danger' : 'btn-outline-danger'}`}
+                        >
+                            <i className={`bi ${recipe.is_liked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {recipe.is_liked ? 'Liked' : 'Like'}
+                        </button>
+                        
+                        {/* 2. Save Button (Bookmark) */}
                         <button 
                             onClick={toggleFav} 
-                            className={`btn ${isFav ? 'btn-danger' : 'btn-outline-danger'}`}
+                            className={`btn ${isFav ? 'btn-primary' : 'btn-outline-primary'}`}
                         >
-                            {isFav ? '♥ Remove Favorite' : '♡ Add to Favorites'}
+                            <i className={`bi ${isFav ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i> {isFav ? 'Saved' : 'Save'}
                         </button>
 
+                        {/* 3. Owner/Admin Buttons */}
                         {isOwnerOrAdmin && (
                             <>
-                                <Link to={`/edit-recipe/${recipe.id}`} className="btn btn-primary">Edit</Link>
-                                <button onClick={handleDelete} className="btn btn-danger">Delete</button>
+                                <Link to={`/edit-recipe/${recipe.id}`} className="btn btn-secondary">Edit</Link>
+                                <button onClick={handleDelete} className="btn btn-outline-secondary">Delete</button>
                             </>
                         )}
                     </div>

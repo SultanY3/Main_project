@@ -41,7 +41,7 @@ function Chatbot() {
             
             {/* Chat Window */}
             {isOpen && (
-                <div className="card shadow mb-3" style={{ width: '300px', height: '400px', display: 'flex', flexDirection: 'column' }}>
+                <div className="card shadow mb-3" style={{ width: '400px', height: '500px', display: 'flex', flexDirection: 'column' }}>
                     <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
                         <strong>👨‍🍳 GohanBot</strong>
                         <button onClick={() => setIsOpen(false)} className="btn btn-sm text-white">

@@ -13,7 +13,7 @@ function Favorites() {
 
     return (
         <div className="container mt-4">
-            <h2 className="text-center mb-4">My Favorite Recipes</h2>
+            <h2 className="text-center mb-4">My Saved Recipes</h2>
             <div className="row g-4">
                 {favorites.length > 0 ? favorites.map(recipe => (
                     <div className="col-md-6 col-lg-4" key={recipe.id}>
@@ -36,7 +36,7 @@ function Favorites() {
                     </div>
                 )) : (
                     <div className="col-12 text-center">
-                        <div className="alert alert-info">No favorite recipes yet.</div>
+                        <div className="alert alert-info">No saved recipes yet.</div>
                     </div>
                 )}
             </div>

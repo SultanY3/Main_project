@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Recipe, Category, Ingredient, Favorite, Comment, Rating, Follow, Notification
+from .models import Recipe, Category, Ingredient, Favorite, Comment, Rating, Follow, Notification, Like
 from django.db.models import Avg
 
 class AdminUserListSerializer(serializers.ModelSerializer):
@@ -63,29 +63,47 @@ class RecipeSerializer(serializers.ModelSerializer):
         child=serializers.CharField(), write_only=True
     )
     ingredients_list = serializers.SerializerMethodField(read_only=True)
-    is_favorite = serializers.SerializerMethodField()
+
+    # --- Updated Fields ---
+    is_favorite = serializers.SerializerMethodField() # "is_SAVED"
+    is_liked = serializers.SerializerMethodField()    # "is_LIKED"
+    
     comments = CommentSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
     rating_count = serializers.SerializerMethodField()
-    likes_count = serializers.SerializerMethodField()
+    
+    likes_count = serializers.SerializerMethodField()     # Public likes
+    favorites_count = serializers.SerializerMethodField() # Private saves
     comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'description', 'instructions', 'image', 
-                  'category', 'category_name', 'ingredients', 'ingredients_list', 
-                  'author', 'created_at', 'is_favorite', 
-                  'comments', 'average_rating', 'rating_count', 'likes_count', 'comments_count']
+        fields = [
+            'id', 'title', 'description', 'instructions', 'image', 
+            'category', 'category_name', 'ingredients', 'ingredients_list', 
+            'author', 'created_at', 
+            'is_favorite', 'is_liked', # ✅ Updated
+            'comments', 'average_rating', 'rating_count', 
+            'likes_count', 'favorites_count', 'comments_count' # ✅ Updated
+        ]
 
     def get_ingredients_list(self, obj):
         return [i.name for i in obj.ingredients.all()]
 
     def get_is_favorite(self, obj):
+        # Checks if user SAVED this (Favorite model)
         user = self.context.get('request').user
         if user and user.is_authenticated:
             return Favorite.objects.filter(user=user, recipe=obj).exists()
         return False
     
+    def get_is_liked(self, obj):
+        # ✅ New: Checks if user LIKED this (Like model)
+        user = self.context.get('request').user
+        if user and user.is_authenticated:
+            return Like.objects.filter(user=user, recipe=obj).exists()
+        return False
+
     def get_average_rating(self, obj):
         return obj.ratings.aggregate(Avg('score'))['score__avg'] or 0
 
@@ -93,10 +111,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         return obj.ratings.count()
 
     def get_likes_count(self, obj):
-        return obj.favorite_set.count() # ✅ Counts favorites
+        # ✅ Changed: Counts from the new 'Like' model
+        return obj.likes.count() 
+
+    def get_favorites_count(self, obj):
+        # ✅ New: Counts from the 'Favorite' model
+        return obj.favorite_set.count()
 
     def get_comments_count(self, obj):
-        return obj.comments.count() # ✅ Counts comments
+        return obj.comments.count()
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])
@@ -116,4 +139,3 @@ class RecipeSerializer(serializers.ModelSerializer):
                 ing_obj, _ = Ingredient.objects.get_or_create(name=name.strip())
                 instance.ingredients.add(ing_obj)
         return instance
-

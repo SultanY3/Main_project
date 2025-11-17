@@ -78,7 +78,7 @@ function Navbar() {
                                 ) : (
                                     <>
                                         <Link className="nav-link" to="/add-recipe">Add Recipe</Link>
-                                        <Link className="nav-link" to="/favorites">Favorites</Link>
+                                        <Link className="nav-link" to="/favorites">Saved</Link>
                                         <Link className="nav-link" to="/profile">Profile</Link>
 
                                         {/* 🔔 NOTIFICATION BELL */}
