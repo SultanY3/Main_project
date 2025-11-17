@@ -162,7 +162,7 @@ function RecipeDetail() {
                     
                     <div className="d-flex align-items-center mb-3">
                         <p className="text-muted mb-0 me-3">
-                            By <span className="fw-bold text-dark">{recipe.author.username}</span>
+                            By <Link to={`/profile/${recipe.author.username}`} className="fw-bold text-dark text-decoration-none">{recipe.author.username}</Link>
                         </p>
                         
                         {currentUser && currentUser.username !== recipe.author.username && (

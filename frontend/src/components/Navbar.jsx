@@ -5,7 +5,7 @@ import api from "../api";
 function Navbar() {
     const navigate = useNavigate();
     const isAuth = !!localStorage.getItem("access");
-    
+
     // User Info
     const userStr = localStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : null;
@@ -18,23 +18,21 @@ function Navbar() {
 
     // Fetch Notifications (Only if logged in)
     useEffect(() => {
-        if (isAuth) {
+        if (isAuth && !isAdmin) { // Admins don't need user notifications
             fetchNotifications();
-            // Optional: Poll every 30 seconds to keep it fresh
-            const interval = setInterval(fetchNotifications, 5000);
+            const interval = setInterval(fetchNotifications, 5000); // Poll every 5 seconds
             return () => clearInterval(interval);
         }
-    }, [isAuth]);
+    }, [isAuth, isAdmin]);
 
     const fetchNotifications = () => {
         api.get("notifications/")
-           .then(res => {
-               setNotifications(res.data);
-               // Count unread items
-               const unread = res.data.filter(n => !n.is_read).length;
-               setUnreadCount(unread);
-           })
-           .catch(err => console.error("Error fetching notifications"));
+            .then(res => {
+                setNotifications(res.data);
+                const unread = res.data.filter(n => !n.is_read).length;
+                setUnreadCount(unread);
+            })
+            .catch(err => console.error("Error fetching notifications"));
     };
 
     const handleLogout = () => {
@@ -46,11 +44,10 @@ function Navbar() {
         if (!showNotifs && unreadCount > 0) {
             // Mark all as read when opening
             api.post("notifications/read_all/")
-               .then(() => {
-                   setUnreadCount(0);
-                   // Update local state to show read
-                   setNotifications(notifications.map(n => ({...n, is_read: true})));
-               });
+                .then(() => {
+                    setUnreadCount(0);
+                    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+                });
         }
         setShowNotifs(!showNotifs);
     };
@@ -61,11 +58,11 @@ function Navbar() {
                 <Link className="navbar-brand fw-bold text-success" to={isAdmin ? "/admin" : "/"}>
                     <i className="bi bi-bowl-rice me-2"></i>GohanHub
                 </Link>
-                
+
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span className="navbar-toggler-icon"></span>
                 </button>
-                
+
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <div className="navbar-nav ms-auto align-items-center">
                         {isAuth ? (
@@ -77,21 +74,22 @@ function Navbar() {
                                     </>
                                 ) : (
                                     <>
+                                        {/* ✅ NEW: Feed Link */}
+                                        <Link className="nav-link fw-bold" to="/feed">Feed</Link>
                                         <Link className="nav-link" to="/add-recipe">Add Recipe</Link>
                                         <Link className="nav-link" to="/favorites">Saved</Link>
                                         <Link className="nav-link" to="/profile">Profile</Link>
 
                                         {/* 🔔 NOTIFICATION BELL */}
                                         <div className="nav-item dropdown position-relative mx-2">
-                                            <button 
+                                            <button
                                                 className="btn nav-link position-relative"
                                                 onClick={toggleNotifications}
                                             >
-                                                <i className={`bi ${unreadCount > 0 ? 'bi-bell-fill text-primary' : 'bi-bell'}`} style={{fontSize: "1.2rem"}}></i>
-                                                
-                                                {/* Red Badge Count */}
+                                                <i className={`bi ${unreadCount > 0 ? 'bi-bell-fill text-primary' : 'bi-bell'}`} style={{ fontSize: "1.2rem" }}></i>
+
                                                 {unreadCount > 0 && (
-                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{fontSize: "0.6rem"}}>
+                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: "0.6rem" }}>
                                                         {unreadCount}
                                                     </span>
                                                 )}
@@ -99,7 +97,7 @@ function Navbar() {
 
                                             {/* Dropdown Menu */}
                                             {showNotifs && (
-                                                <div className="card position-absolute end-0 mt-2 shadow" style={{width: "300px", zIndex: 1000, maxHeight: "400px", overflowY: "auto"}}>
+                                                <div className="card position-absolute end-0 mt-2 shadow" style={{ width: "300px", zIndex: 1000, maxHeight: "400px", overflowY: "auto" }}>
                                                     <div className="card-header bg-light py-2">
                                                         <small className="fw-bold">Notifications</small>
                                                     </div>
@@ -107,10 +105,10 @@ function Navbar() {
                                                         {notifications.length > 0 ? (
                                                             notifications.map(n => (
                                                                 <li key={n.id} className={`list-group-item ${!n.is_read ? 'bg-light' : ''}`}>
-                                                                    <small className="d-block text-muted mb-1" style={{fontSize: "0.75rem"}}>
+                                                                    <small className="d-block text-muted mb-1" style={{ fontSize: "0.75rem" }}>
                                                                         {new Date(n.created_at).toLocaleDateString()}
                                                                     </small>
-                                                                    <span style={{fontSize: "0.9rem"}}>{n.text}</span>
+                                                                    <span style={{ fontSize: "0.9rem" }}>{n.text}</span>
                                                                 </li>
                                                             ))
                                                         ) : (

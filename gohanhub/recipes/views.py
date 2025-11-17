@@ -15,6 +15,7 @@ import google.generativeai as genai
 import random
 from django.utils import timezone
 from datetime import timedelta
+import os
 
 
 # Handles Recipes (List, Create, Update, Delete)
@@ -70,6 +71,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         else:
             obj.delete()
             return Response({'status': 'removed'})
+        
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def feed(self, request):
+        """
+        Returns a feed of recipes from authors the user follows.
+        """
+        # Get a list of user IDs that the current user is following
+        following_user_ids = request.user.following.values_list('following_id', flat=True)
+        
+        # Filter recipes where the author is in that list, ordered by most recent
+        queryset = Recipe.objects.filter(author_id__in=following_user_ids).order_by('-created_at')
+        
+        # Use the serializer with context to get all recipe details
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
@@ -204,21 +220,23 @@ class UserProfileView(viewsets.GenericViewSet):
 class PublicUserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     View public user profiles and handle following.
+    Uses 'username' as the lookup field.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny] # Anyone can view profiles
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'username' # ✅ Changed from ID to username
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def follow(self, request, pk=None):
+    def follow(self, request, username=None): # ✅ Updated param
         target_user = self.get_object()
+        
         if request.user == target_user:
             return Response({'error': 'You cannot follow yourself'}, status=400)
         
         obj, created = Follow.objects.get_or_create(follower=request.user, following=target_user)
         
         if created:
-            # ✅ Create Notification
             Notification.objects.create(
                 recipient=target_user,
                 actor=request.user,
@@ -229,6 +247,15 @@ class PublicUserViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             obj.delete()
             return Response({'status': 'unfollowed'})
+
+    # Get recipes for this public user
+    @action(detail=True, methods=['get'])
+    def recipes(self, request, username=None):
+        user = self.get_object()
+        recipes = Recipe.objects.filter(author=user).order_by('-created_at')
+        # We reuse the existing RecipeSerializer
+        serializer = RecipeSerializer(recipes, many=True, context={'request': request})
+        return Response(serializer.data)
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificationSerializer
@@ -290,7 +317,7 @@ def google_login(request):
 
     try:
         # 1. Verify the token with Google
-        CLIENT_ID = "493280394224-k31td9mqg6d02b9db56dbdopp4ngml89.apps.googleusercontent.com" 
+        CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), CLIENT_ID)
 
         # 2. Get user info
@@ -416,7 +443,7 @@ def ai_chat(request):
     try:
         # Configure the API
         #  SECURITY : In production, use os.environ.get('GEMINI_API_KEY')
-        genai.configure(api_key="AIzaSyD9RrhPF_Mpt1Tbk7JTP1xJmoYo5S25LVw") 
+        genai.configure(api_key=os.environ.get('GEMINI_API_KEY')) 
         
         # Initialize Model
         model = genai.GenerativeModel('models/gemini-flash-latest')        

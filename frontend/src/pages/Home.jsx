@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { Link, useSearchParams } from "react-router-dom";
+import RecipeCard from "../components/RecipeCard"; // Using the reusable component
 
 function Home() {
     const [recipes, setRecipes] = useState([]);
@@ -16,9 +17,11 @@ function Home() {
         getRecipes();
         getCategories();
 
+        // ✅ FIX: Sync the input box state to the URL search param
+        // This clears the box when the 'search' param is removed (e.g., clicking Home)
         setSearchInput(searchParams.get("search") || "");
-        
-    }, [searchParams]);
+
+    }, [searchParams]); // Re-runs whenever the URL params change
 
     const getRecipes = () => {
         const category = searchParams.get("category");
@@ -64,7 +67,7 @@ function Home() {
         setSearchParams(params);
     };
 
-    // ✅ FIXED: This function now ONLY removes the category param
+    // This function now ONLY removes the category param
     const handleAllCategory = () => {
         const params = new URLSearchParams(searchParams);
         params.delete("category"); // Keep other params like 'search'
@@ -78,14 +81,13 @@ function Home() {
                 <input 
                     className="form-control"
                     placeholder="Search recipes..." 
-                    value={searchInput}
+                    value={searchInput} // This is now correctly synced by useEffect
                     onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <button className="btn btn-primary" type="submit">Search</button>
             </form>
             
             <div className="mb-4 d-flex flex-wrap gap-2">
-                {/* ✅ This button now calls the corrected function */}
                 <button className="btn btn-secondary" onClick={handleAllCategory}>
                     All
                 </button>
@@ -100,49 +102,12 @@ function Home() {
                 ))}
             </div>
 
-            {/* Recipe Grid (No changes) */}
+            {/* Recipe Grid */}
             <div className="row g-4">
                 {recipes.map((recipe) => (
                     <div className="col-lg-4 col-md-6" key={recipe.id}>
-                        <div className="card h-100 shadow-sm border-0">
-                            {recipe.image ? (
-                                <img src={recipe.image} className="card-img-top" style={{height: "200px", objectFit: "cover"}} />
-                            ) : (
-                                <div className="bg-light d-flex align-items-center justify-content-center" style={{height: "200px"}}>No Image</div>
-                            )}
-                            
-                            <div className="card-body d-flex flex-column">
-                                <h5 className="card-title text-truncate">
-                                    <Link to={`/recipe/${recipe.id}`} className="text-decoration-none text-dark">
-                                        {recipe.title}
-                                    </Link>
-                                </h5>
-                                <p className="card-text text-muted small">
-                                    By {recipe.author.username}
-                                </p>
-                                
-                                <p className="card-text text-secondary flex-grow-1">
-                                    {recipe.description.substring(0, 80)}...
-                                </p>
-
-                                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                                    <div className="d-flex gap-3 text-muted small">
-                                        <span title="Rating">
-                                            <i className="bi bi-star-fill text-warning"></i> {recipe.average_rating.toFixed(1)}
-                                        </span>
-                                        <span title="Likes">
-                                            <i className="bi bi-heart-fill text-danger"></i> {recipe.likes_count}
-                                        </span>
-                                        <span title="Comments">
-                                            <i className="bi bi-chat-fill text-primary"></i> {recipe.comments_count}
-                                        </span>
-                                    </div>
-                                    <Link to={`/recipe/${recipe.id}`} className="btn btn-sm btn-outline-primary">
-                                        View Recipe
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Use the reusable RecipeCard component */}
+                        <RecipeCard recipe={recipe} />
                     </div>
                 ))}
             </div>

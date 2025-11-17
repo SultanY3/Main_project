@@ -11,9 +11,11 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminRecipes from "./pages/AdminRecipes";
 import AdminHome from "./pages/AdminHome"; 
 import AdminRoute from "./components/AdminRoute";
-import Favorites from "./pages/Favorites";
+import Favorites from "./pages/Favorites"; // This is your "Saved Recipes" page
 import ForgotPassword from "./pages/ForgotPassword";
 import Chatbot from "./components/Chatbot";
+import Feed from "./pages/Feed";
+import PublicProfile from "./pages/PublicProfile";
 
 function ProtectedRoute({ children }) {
   const isAuth = !!localStorage.getItem("access");
@@ -31,6 +33,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
+        
+        {/* ✅ NEW: Public profile route. Must be before /profile */}
+        <Route path="/profile/:username" element={<PublicProfile />} />
 
         {/* User Protected Routes */}
         <Route path="/add-recipe" element={
@@ -45,8 +50,13 @@ function App() {
         <Route path="/favorites" element={
           <ProtectedRoute><Favorites /></ProtectedRoute>
         } />
+        
+        {/* ✅ NEW: Following Feed route */}
+        <Route path="/feed" element={
+          <ProtectedRoute><Feed /></ProtectedRoute>
+        } />
 
-        {/* ✅ Admin Routes */}
+        {/* Admin Routes */}
         <Route path="/admin" element={
           <AdminRoute><AdminHome /></AdminRoute>
         } />
