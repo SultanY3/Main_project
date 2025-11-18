@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../api";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify"; // 1. Import Toast
 
 function Register() {
     const [formData, setFormData] = useState({
@@ -12,9 +13,10 @@ function Register() {
         e.preventDefault();
         try {
             await api.post("register/", formData); // Uses the view we made earlier
+            toast.success("Account created! Please login."); // Added Success Toast
             navigate("/login");
         } catch (err) {
-            alert("Registration failed. Username might be taken.");
+            toast.error("Registration failed. Username might be taken."); // Replaced alert
         }
     };
 

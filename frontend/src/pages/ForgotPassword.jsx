@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { toast } from "react-toastify"; // ✅ Import Toast
 
 function ForgotPassword() {
     const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
@@ -8,22 +9,18 @@ function ForgotPassword() {
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(""); // ✅ State for errors
     const navigate = useNavigate();
-
-    // Helper to reset error when user types
-    const clearError = () => setError("");
 
     // Step 1: Send OTP
     const handleRequestOTP = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             await api.post("forgot-password/", { email });
-            setStep(2); // ✅ Move to next step silently
+            toast.success("OTP sent to your email!");
+            setStep(2); 
         } catch (err) {
-            setError("Could not send OTP. Please check the email.");
+            toast.error("Could not send OTP. Check the email.");
         } finally {
             setLoading(false);
         }
@@ -33,12 +30,12 @@ function ForgotPassword() {
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             await api.post("verify-otp/", { email, otp });
-            setStep(3); // ✅ Move to next step silently
+            toast.success("OTP Verified!");
+            setStep(3); 
         } catch (err) {
-            setError("Invalid or expired OTP. Please try again.");
+            toast.error("Invalid or expired OTP.");
         } finally {
             setLoading(false);
         }
@@ -48,12 +45,12 @@ function ForgotPassword() {
     const handleResetPassword = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             await api.post("reset-password/", { email, otp, new_password: newPassword });
-            navigate("/login"); // ✅ Redirect silently
+            toast.success("Password reset successful! Please login.");
+            navigate("/login"); 
         } catch (err) {
-            setError("Failed to reset password. Please try again.");
+            toast.error("Failed to reset password.");
         } finally {
             setLoading(false);
         }
@@ -68,9 +65,6 @@ function ForgotPassword() {
                     {step === 3 && "Reset Password"}
                 </h3>
 
-                {/* ✅ Inline Error Message */}
-                {error && <div className="alert alert-danger py-2">{error}</div>}
-
                 {/* --- STEP 1: EMAIL FORM --- */}
                 {step === 1 && (
                     <form onSubmit={handleRequestOTP}>
@@ -80,7 +74,7 @@ function ForgotPassword() {
                                 type="email" 
                                 className="form-control" 
                                 value={email}
-                                onChange={(e) => { setEmail(e.target.value); clearError(); }}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required 
                                 placeholder="e.g. john@example.com"
                             />
@@ -100,7 +94,7 @@ function ForgotPassword() {
                                 type="text" 
                                 className="form-control text-center" 
                                 value={otp}
-                                onChange={(e) => { setOtp(e.target.value); clearError(); }}
+                                onChange={(e) => setOtp(e.target.value)}
                                 required 
                                 placeholder="123456"
                                 maxLength="6"
@@ -111,7 +105,7 @@ function ForgotPassword() {
                             {loading ? "Verifying..." : "Verify OTP"}
                         </button>
                         <div className="text-center mt-3">
-                            <button type="button" className="btn btn-link btn-sm" onClick={() => {setStep(1); setError("");}}>
+                            <button type="button" className="btn btn-link btn-sm" onClick={() => setStep(1)}>
                                 Wrong email?
                             </button>
                         </div>
@@ -127,7 +121,7 @@ function ForgotPassword() {
                                 type="password" 
                                 className="form-control" 
                                 value={newPassword}
-                                onChange={(e) => { setNewPassword(e.target.value); clearError(); }}
+                                onChange={(e) => setNewPassword(e.target.value)}
                                 required 
                                 placeholder="Minimum 6 characters"
                                 minLength="6"

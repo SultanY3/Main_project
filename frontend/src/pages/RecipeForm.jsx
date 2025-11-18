@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
+import { toast } from "react-toastify"; // 1. Import Toast
 
 function RecipeForm() {
     const { id } = useParams(); // Get ID from URL (if in edit mode)
@@ -22,7 +23,10 @@ function RecipeForm() {
         // 1. Fetch Categories for the dropdown
         api.get("categories/")
             .then((res) => setCategories(res.data))
-            .catch((err) => console.error("Error loading categories:", err));
+            .catch((err) => {
+                console.error("Error loading categories:", err);
+                toast.error("Failed to load categories.");
+            });
 
         // 2. If we have an ID, we are in EDIT mode. Fetch recipe data.
         if (id) {
@@ -36,14 +40,13 @@ function RecipeForm() {
                     setCurrentImageUrl(data.image);
                     
                     // Convert the list of ingredients back to a string for the input field
-                    // Example: ["Flour", "Sugar"] -> "Flour, Sugar"
                     if (data.ingredients_list) {
                         setIngredients(data.ingredients_list.join(", "));
                     }
                 })
                 .catch((err) => {
                     console.error("Error fetching recipe:", err);
-                    alert("Could not load recipe for editing.");
+                    toast.error("Could not load recipe for editing."); // Replaced alert
                     navigate("/");
                 });
         }
@@ -59,7 +62,6 @@ function RecipeForm() {
         formData.append("category", category);
 
         // Process ingredients: Split string into array and append each individually
-        // Backend expects: ingredients=["Flour", "Sugar"]
         const ingList = ingredients.split(",").map((i) => i.trim()).filter(i => i);
         ingList.forEach((ing) => formData.append("ingredients", ing));
 
@@ -74,19 +76,19 @@ function RecipeForm() {
                 await api.put(`recipes/${id}/`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
-                alert("Recipe updated successfully!");
+                toast.success("Recipe updated successfully!"); // Replaced alert
                 navigate(`/recipe/${id}`); // Go back to detail view
             } else {
                 // Create new recipe (POST)
                 await api.post("recipes/", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
-                alert("Recipe added successfully!");
+                toast.success("Recipe added successfully!"); // Replaced alert
                 navigate("/"); // Go to home
             }
         } catch (err) {
             console.error("Error saving recipe:", err);
-            alert("Error saving recipe. Please check all fields.");
+            toast.error("Error saving recipe. Please check all fields."); // Replaced alert
         }
     };
 

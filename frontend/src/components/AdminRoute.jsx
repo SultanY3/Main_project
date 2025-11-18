@@ -1,11 +1,12 @@
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ Import Context
 
 function AdminRoute({ children }) {
-    const userStr = localStorage.getItem("user");
-    const user = userStr ? JSON.parse(userStr) : null;
+    // ✅ Use context to check permissions
+    const { user, isAuth } = useAuth();
 
-    // Check if user exists AND is a superuser
-    if (user && user.is_superuser) {
+    // Check if authenticated AND is a superuser
+    if (isAuth && user?.is_superuser) {
         return children;
     } else {
         // Redirect unauthorized users to home

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function AdminRecipes() {
     const [recipes, setRecipes] = useState([]);
@@ -8,16 +9,20 @@ function AdminRecipes() {
     useEffect(() => {
         api.get("admin-dashboard/recipes/")
            .then(res => setRecipes(res.data))
-           .catch(err => console.error(err));
+           .catch(err => {
+               console.error(err);
+               toast.error("Failed to load recipes.");
+           });
     }, []);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this recipe?")) {
             try {
-                await api.delete(`recipes/${id}/`); // Uses standard recipe delete
+                await api.delete(`recipes/${id}/`); 
                 setRecipes(recipes.filter(r => r.id !== id));
+                toast.success("Recipe deleted successfully.");
             } catch (err) {
-                alert("Failed to delete recipe.");
+                toast.error("Failed to delete recipe.");
             }
         }
     };
@@ -26,11 +31,12 @@ function AdminRecipes() {
         <div className="container mt-4">
             <h2>Recipe Management</h2>
             <table className="table table-striped mt-3">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Actions</th>
+                {/* ✅ FIX: Use Brand Color instead of table-dark */}
+                <thead className="text-white" style={{ backgroundColor: 'var(--brand-color)' }}>
+                    <tr style={{ backgroundColor: 'inherit' }}>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Title</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Author</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Actions</th>
                     </tr>
                 </thead>
                 <tbody>

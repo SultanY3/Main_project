@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { ToastContainer } from 'react-toastify'; // ✅ Import Toast Container
+import 'react-toastify/dist/ReactToastify.css'; // ✅ Import Toast CSS
+
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -11,21 +14,40 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminRecipes from "./pages/AdminRecipes";
 import AdminHome from "./pages/AdminHome"; 
 import AdminRoute from "./components/AdminRoute";
-import Favorites from "./pages/Favorites"; // This is your "Saved Recipes" page
+import Favorites from "./pages/Favorites"; 
 import ForgotPassword from "./pages/ForgotPassword";
 import Chatbot from "./components/Chatbot";
 import Feed from "./pages/Feed";
 import PublicProfile from "./pages/PublicProfile";
+import { useAuth } from "./context/AuthContext"; // ✅ Import Context for ProtectedRoute
 
+// ✅ Updated ProtectedRoute to use Context (No more localStorage checks!)
 function ProtectedRoute({ children }) {
-  const isAuth = !!localStorage.getItem("access");
+  const { isAuth } = useAuth();
+  // We allow a brief moment for auth to load, or redirect
+  // For simplicity, if not auth, send to login
   return isAuth ? children : <Navigate to="/login" />;
 }
 
 function App() {
   return (
     <BrowserRouter>
+      {/* ✅ Add the Toaster here so it works everywhere */}
+      <ToastContainer 
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored" 
+      />
+      
       <Navbar />
+      
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
@@ -34,7 +56,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
         
-        {/* ✅ NEW: Public profile route. Must be before /profile */}
+        {/* Public Profile */}
         <Route path="/profile/:username" element={<PublicProfile />} />
 
         {/* User Protected Routes */}
@@ -50,8 +72,6 @@ function App() {
         <Route path="/favorites" element={
           <ProtectedRoute><Favorites /></ProtectedRoute>
         } />
-        
-        {/* ✅ NEW: Following Feed route */}
         <Route path="/feed" element={
           <ProtectedRoute><Feed /></ProtectedRoute>
         } />

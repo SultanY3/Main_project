@@ -2,58 +2,63 @@ import { useState } from "react";
 import api from "../api";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from '@react-oauth/google';
+import { useAuth } from "../context/AuthContext"; // 1. Import Context
+import { toast } from "react-toastify";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(""); // ✅ Error state
+    
     const navigate = useNavigate();
+    const { login } = useAuth(); // 2. Get login function
 
-    const handleLoginSuccess = (response) => {
-        // Helper to handle storage and redirect
-        localStorage.setItem("access", response.data.access);
-        localStorage.setItem("refresh", response.data.refresh);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+    const handleLoginSuccess = (data) => {
+        // 3. Use context function instead of setting localStorage manually
+        login(data);
         
-        if (response.data.user.is_superuser) {
+        toast.success("Welcome back!");
+        
+        if (data.user.is_superuser) {
             navigate("/admin");
         } else {
-            navigate("/");
+            // Change this to "/feed" if you want them to go to their Feed instead
+            navigate("/"); 
         }
     };
 
     // Standard Login
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
         try {
             // Get Token
             const res = await api.post("token/", { username, password });
-            // Get User Info
+            
+            // Get User Info (needed because token endpoint usually just gives access/refresh)
             const userRes = await api.get("user/me/", {
                 headers: { Authorization: `Bearer ${res.data.access}` } 
             });
             
-            // Combine data for success handler
+            // Combine data and login
             handleLoginSuccess({ 
-                data: { ...res.data, user: userRes.data } 
+                ...res.data, 
+                user: userRes.data 
             });
 
         } catch (error) {
-            setError("Invalid username or password.");
+            toast.error("Invalid username or password.");
         }
     };
 
     // Google Login
     const handleGoogleSuccess = async (credentialResponse) => {
-        setError("");
         try {
             const res = await api.post("google-login/", { 
                 token: credentialResponse.credential 
             });
-            handleLoginSuccess(res);
+            // Google login endpoint usually returns user data + tokens together
+            handleLoginSuccess(res.data); 
         } catch (err) {
-            setError("Google Login failed. Please try again.");
+            toast.error("Google Login failed. Please try again.");
         }
     };
 
@@ -62,13 +67,10 @@ function Login() {
             <div className="card p-4 shadow">
                 <h2 className="text-center mb-4">Login</h2>
                 
-                {/* ✅ Inline Error Message */}
-                {error && <div className="alert alert-danger py-2 text-center">{error}</div>}
-
                 <div className="d-flex justify-content-center mb-3">
                     <GoogleLogin
                         onSuccess={handleGoogleSuccess}
-                        onError={() => setError("Google Login Failed")}
+                        onError={() => toast.error("Google Login Failed")}
                         useOneTap
                         theme="filled_blue"
                         shape="pill"
@@ -89,7 +91,7 @@ function Login() {
                             type="text" 
                             placeholder="Username" 
                             value={username} 
-                            onChange={(e) => { setUsername(e.target.value); setError(""); }} 
+                            onChange={(e) => setUsername(e.target.value)} 
                             required 
                         />
                     </div>
@@ -99,7 +101,7 @@ function Login() {
                             type="password" 
                             placeholder="Password" 
                             value={password} 
-                            onChange={(e) => { setPassword(e.target.value); setError(""); }} 
+                            onChange={(e) => setPassword(e.target.value)} 
                             required 
                         />
                         <div className="text-end mt-1">

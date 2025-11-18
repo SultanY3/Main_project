@@ -1,32 +1,156 @@
 /* src/index.css */
 
 :root {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* 🎨 BRAND COLOR: PREMIUM EMERALD */
+  /* Replaces all Blues (Primary) and Greens (Success) with this single color */
+  --brand-color: #10b981; 
   
-  /* Optional: Set base colors if not using Bootstrap defaults */
-  color: #212529;
-  background-color: #ffffff;
+  /* --- 1. DEFAULT LIGHT THEME --- */
+  --bg-body: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-navbar: #ffffff;
+  --text-main: #2d3436;
+  --text-muted: #636e72;
+  --border-color: #dfe6e9;
+  --card-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Softer, modern shadow */
 }
 
+/* --- 2. DARK THEME --- */
+[data-theme="dark"] {
+  --bg-body: #121212;
+  --bg-card: #1e1e1e;
+  --bg-navbar: #1e1e1e;
+  --text-main: #ffffff;
+  --text-muted: #b2bec3;
+  --border-color: #2d3436;
+  --card-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* --- GLOBAL RESETS --- */
+
 body {
-  margin: 0;
-  /* ✅ FIX: Removed 'display: flex' and 'place-items: center' */
-  display: block; 
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.3s, color 0.3s;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 a {
   text-decoration: none;
-  color: inherit;
+  color: var(--brand-color);
+  transition: opacity 0.2s;
 }
 
 a:hover {
-  color: inherit; 
+  color: var(--brand-color);
+  opacity: 0.8;
 }
 
-button {
-  cursor: pointer;
+/* --- 🎨 THE "UNIFIER" - FORCE ALL BOOTSTRAP BUTTONS TO MATCH --- */
+
+/* 1. Override Primary Buttons (Blue -> Brand Color) */
+.btn-primary, .btn-success {
+  background-color: var(--brand-color) !important;
+  border-color: var(--brand-color) !important;
+  color: #fff !important;
+  border-radius: 8px; /* Modern rounded corners */
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  transition: transform 0.1s ease;
+}
+
+.btn-primary:hover, .btn-success:hover {
+  opacity: 0.9;
+  transform: translateY(-1px); /* Subtle lift effect */
+}
+
+/* 2. Override Outline Buttons (Blue/Green outlines -> Brand Color) */
+.btn-outline-primary, .btn-outline-success {
+  color: var(--brand-color) !important;
+  border-color: var(--brand-color) !important;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-outline-primary:hover, .btn-outline-success:hover {
+  background-color: var(--brand-color) !important;
+  color: #fff !important;
+}
+
+/* 3. Override Text Colors */
+.text-primary, .text-success {
+  color: var(--brand-color) !important;
+}
+
+/* 4. Override Navbar Brand */
+.navbar-brand {
+  color: var(--brand-color) !important;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+/* --- COMPONENT REFINEMENTS --- */
+
+/* Cards */
+.card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--card-shadow);
+  color: var(--text-main) !important;
+  border-radius: 12px; /* Softer cards */
+  overflow: hidden;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--bg-navbar) !important;
+  border-bottom: 1px solid var(--border-color);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.nav-link {
+  color: var(--text-main) !important;
+  font-weight: 500;
+}
+.nav-link:hover {
+  color: var(--brand-color) !important;
+}
+
+/* Inputs */
+.form-control, .form-select {
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+  border: 2px solid var(--border-color) !important;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--brand-color) !important;
+  box-shadow: none !important; /* Remove the blue glow */
+}
+
+/* Notifications & List Items */
+.list-group-item {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* --- DARK MODE SPECIFIC TEXT FIXES --- */
+
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] .card-title, 
+[data-theme="dark"] label {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #b2bec3 !important;
+}
+
+[data-theme="dark"] ::placeholder {
+    color: #636e72 !important;
+    opacity: 1;
 }

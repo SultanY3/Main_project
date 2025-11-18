@@ -2,29 +2,26 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../api";
 import RecipeCard from "../components/RecipeCard";
+import { useAuth } from "../context/AuthContext"; 
 
 function PublicProfile() {
-    const { username } = useParams(); // Get username from URL
+    const { username } = useParams(); 
     const [user, setUser] = useState(null);
     const [recipes, setRecipes] = useState([]);
     
-    const userStr = localStorage.getItem("user");
-    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const { user: currentUser } = useAuth();
 
     useEffect(() => {
-        // Fetch user details by username
         api.get(`users/${username}/`)
            .then(res => setUser(res.data))
            .catch(err => console.error("Error fetching user", err));
         
-        // Fetch user's recipes by username
         api.get(`users/${username}/recipes/`)
            .then(res => setRecipes(res.data))
            .catch(err => console.error("Error fetching recipes", err));
-    }, [username]); // Re-run if username in URL changes
+    }, [username]); 
 
     const handleFollowToggle = () => {
-        // Note: Follow action still uses username in URL
         api.post(`users/${username}/follow/`) 
            .then(res => {
                 setUser(prev => ({
@@ -39,7 +36,7 @@ function PublicProfile() {
 
     if (!user) return <div className="text-center mt-5">Loading Profile...</div>;
 
-    // Check if this is the logged-in user's own profile
+    // Check if this profile belongs to the currently logged-in user
     const isSelf = currentUser && currentUser.username === user.username;
 
     return (
@@ -67,14 +64,18 @@ function PublicProfile() {
                                 </div>
                             </div>
                             
-                            {/* Show Follow or Edit Profile button */}
+                            {/* Logic: 
+                                1. If it's ME -> Show Edit Button
+                                2. If it's NOT ME but I am logged in -> Show Follow Button
+                                3. If I am a GUEST -> Show Nothing 
+                            */}
                             {isSelf ? (
                                 <Link to="/profile" className="btn btn-outline-primary w-100">Edit Your Profile</Link>
-                            ) : (
+                            ) : currentUser ? (
                                 <button onClick={handleFollowToggle} className={`btn w-100 ${user.is_following ? 'btn-secondary' : 'btn-primary'}`}>
                                     {user.is_following ? 'Unfollow' : 'Follow'}
                                 </button>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 </div>

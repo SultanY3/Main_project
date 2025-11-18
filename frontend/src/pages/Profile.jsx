@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ Import Context
 
 function Profile() {
     const [recipes, setRecipes] = useState([]);
-    const [user, setUser] = useState(null);
     const [editing, setEditing] = useState(false);
+    
+    // ✅ Get user and the refresh function from Context
+    const { user, refreshUser } = useAuth();
 
     // Form data state
     const [editData, setEditData] = useState({
         first_name: "", last_name: "", email: ""
     });
 
-    // ✅ State for silent messages (No alerts)
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -22,30 +24,34 @@ function Profile() {
     };
 
     useEffect(() => {
-        // 1. Fetch User Details
-        api.get("user/me/").then(res => {
-            setUser(res.data);
+        // 1. Setup form data when user is available
+        if (user) {
             setEditData({
-                first_name: res.data.first_name,
-                last_name: res.data.last_name,
-                email: res.data.email
+                first_name: user.first_name || "",
+                last_name: user.last_name || "",
+                email: user.email || ""
             });
-        });
+        }
         
         // 2. Fetch My Recipes
-        api.get("recipes/mine/").then(res => setRecipes(res.data));
-    }, []);
+        // Note: We still need to fetch recipes as they aren't in the global auth context
+        api.get("recipes/mine/")
+           .then(res => setRecipes(res.data))
+           .catch(err => console.error("Error fetching recipes:", err));
+    }, [user]); // Re-run if context user changes
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         clearMessages();
         try {
-            const res = await api.put("user/me/", editData);
-            setUser(res.data); // Update local user data
+            await api.put("user/me/", editData);
             
-            // ✅ Show success message instead of alert
+            // ✅ CRITICAL: Refresh the global user context
+            // This ensures the Navbar and AdminRoute see the changes immediately
+            await refreshUser(); 
+            
             setSuccess("Profile updated successfully!");
-            setTimeout(() => setSuccess(""), 3000); // Fade out after 3s
+            setTimeout(() => setSuccess(""), 3000);
             
             setEditing(false);
         } catch (err) {
@@ -54,7 +60,6 @@ function Profile() {
     };
 
     const handleDeleteRecipe = (id) => {
-        // confirm() is a standard safety check, usually acceptable to keep
         if(window.confirm("Are you sure you want to delete this recipe?")) {
             api.delete(`recipes/${id}/`).then(() => {
                 setRecipes(recipes.filter(r => r.id !== id));
@@ -72,13 +77,12 @@ function Profile() {
                     <div className="card shadow-sm">
                         <div className="card-body text-center">
                             
-                            {/* ✅ Success/Error Messages */}
                             {success && <div className="alert alert-success py-2 small">{success}</div>}
                             
+                            {/* This now displays data directly from the global context */}
                             <h3 className="mb-1">{user.first_name} {user.last_name}</h3>
                             <p className="text-muted mb-3">@{user.username}</p>
 
-                            {/* Stats Row */}
                             <div className="d-flex justify-content-center gap-4 mb-4 border-top border-bottom py-3">
                                 <div>
                                     <h5 className="mb-0 fw-bold">{recipes.length}</h5>
@@ -104,7 +108,6 @@ function Profile() {
                             ) : (
                                 <form onSubmit={handleUpdateUser} className="text-start">
                                     
-                                    {/* ✅ Inline Error */}
                                     {error && <div className="alert alert-danger py-2 small">{error}</div>}
 
                                     <div className="mb-2">
@@ -146,14 +149,13 @@ function Profile() {
                             <div className="col-md-6" key={recipe.id}>
                                 <div className="card h-100">
                                      {recipe.image ? (
-                                        <img src={recipe.image} className="card-img-top" style={{height: "150px", objectFit: "cover"}} />
+                                        <img src={recipe.image} className="card-img-top" style={{height: "150px", objectFit: "cover"}} alt={recipe.title} />
                                      ) : (
                                         <div className="bg-light d-flex align-items-center justify-content-center" style={{height: "150px"}}>No Image</div>
                                      )}
                                     <div className="card-body">
                                         <h5 className="card-title text-truncate">{recipe.title}</h5>
                                         
-                                        {/* Card Stats */}
                                         <div className="d-flex gap-3 text-muted small mb-3">
                                             <span><i className="bi bi-star-fill text-warning"></i> {recipe.average_rating ? recipe.average_rating.toFixed(1) : "0.0"}</span>
                                             <span><i className="bi bi-heart-fill text-danger"></i> {recipe.likes_count}</span>

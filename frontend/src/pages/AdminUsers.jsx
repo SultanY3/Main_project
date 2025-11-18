@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import { toast } from "react-toastify"; 
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
@@ -11,7 +12,10 @@ function AdminUsers() {
     const fetchUsers = () => {
         api.get("admin-dashboard/users/")
            .then(res => setUsers(res.data))
-           .catch(err => console.error(err));
+           .catch(err => {
+               console.error(err);
+               toast.error("Failed to fetch users.");
+           });
     };
 
     const handleDelete = async (id, username) => {
@@ -19,8 +23,9 @@ function AdminUsers() {
             try {
                 await api.delete(`admin-dashboard/users/${id}/`);
                 setUsers(users.filter(u => u.id !== id));
+                toast.success(`User ${username} deleted successfully.`);
             } catch (err) {
-                alert("Failed to delete user.");
+                toast.error("Failed to delete user.");
             }
         }
     };
@@ -29,13 +34,14 @@ function AdminUsers() {
         <div className="container mt-4">
             <h2>User Management</h2>
             <table className="table table-striped mt-3">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Joined</th>
-                        <th>Recipes</th>
-                        <th>Actions</th>
+                {/* ✅ FIX: Use Brand Color instead of table-dark */}
+                <thead className="text-white" style={{ backgroundColor: 'var(--brand-color)' }}>
+                    <tr style={{ backgroundColor: 'inherit' }}> {/* Ensure row inherits color */}
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Username</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Email</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Joined</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Recipes</th>
+                        <th style={{ backgroundColor: 'inherit', color: 'white' }}>Actions</th>
                     </tr>
                 </thead>
                 <tbody>

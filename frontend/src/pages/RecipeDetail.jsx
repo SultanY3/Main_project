@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import { useAuth } from "../context/AuthContext"; 
+import { toast } from "react-toastify"; 
 
-// --- Helper Components for Stars ---
+// --- Helper Components (Stars) ---
 const DisplayStars = ({ rating }) => {
     const totalStars = 5;
     const fullStars = Math.floor(rating);
@@ -57,37 +59,37 @@ function RecipeDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [recipe, setRecipe] = useState(null);
-    const [isFav, setIsFav] = useState(false); // This now tracks "is_SAVED"
+    const [isFav, setIsFav] = useState(false);
     const [newComment, setNewComment] = useState(""); 
     
-    const userStr = localStorage.getItem("user");
-    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const { user: currentUser } = useAuth(); 
 
     const fetchRecipe = () => {
         api.get(`recipes/${id}/`)
            .then(res => {
                 setRecipe(res.data);
-                setIsFav(res.data.is_favorite); // Tracks "is_SAVED"
+                setIsFav(res.data.is_favorite);
            })
-           .catch(err => console.error("Error fetching recipe"));
+           .catch(err => {
+               console.error(err);
+               toast.error("Could not load recipe.");
+           });
     };
 
     useEffect(() => {
         fetchRecipe();
     }, [id]);
 
-    // This is now for SAVING (Bookmark)
     const toggleFav = () => {
         api.post(`recipes/${id}/favorite/`).then(res => {
             setIsFav(res.data.status === 'added');
-        });
+            toast.success(res.data.status === 'added' ? "Recipe saved!" : "Recipe removed from saved.");
+        }).catch(() => toast.error("Action failed."));
     };
 
-    // ✅ NEW: Handle LIKING (Heart)
     const handleLikeToggle = () => {
         api.post(`recipes/${id}/like/`)
            .then(res => {
-                // Update state locally for instant UI feedback
                 setRecipe(prev => ({
                     ...prev,
                     is_liked: res.data.status === 'liked',
@@ -95,16 +97,18 @@ function RecipeDetail() {
                         ? prev.likes_count + 1 
                         : prev.likes_count - 1
                 }));
-           });
+           })
+           .catch(() => toast.error("Could not like recipe."));
     };
 
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to delete this recipe?")) {
             try {
                 await api.delete(`recipes/${id}/`);
+                toast.success("Recipe deleted.");
                 navigate("/");
             } catch (err) {
-                console.error("Delete failed");
+                toast.error("Delete failed.");
             }
         }
     };
@@ -117,8 +121,9 @@ function RecipeDetail() {
             await api.post(`recipes/${id}/comment/`, { text: newComment });
             setNewComment(""); 
             fetchRecipe(); 
+            toast.success("Comment posted!");
         } catch (err) {
-            console.error("Comment failed");
+            toast.error("Failed to post comment.");
         }
     };
 
@@ -126,26 +131,29 @@ function RecipeDetail() {
         try {
             await api.post(`recipes/${id}/rate/`, { score: score });
             fetchRecipe();
+            toast.success("Rating submitted!");
         } catch (err) {
-            console.error("Rating failed");
+            toast.error("Failed to submit rating.");
         }
     };
 
     const handleFollowToggle = () => {
         api.post(`users/${recipe.author.id}/follow/`)
            .then(res => {
+                const isFollowing = res.data.status === 'followed';
                 setRecipe(prevRecipe => ({
                     ...prevRecipe,
                     author: {
                         ...prevRecipe.author,
-                        is_following: res.data.status === 'followed',
-                        followers_count: res.data.status === 'followed'
+                        is_following: isFollowing,
+                        followers_count: isFollowing
                             ? prevRecipe.author.followers_count + 1
                             : prevRecipe.author.followers_count - 1
                     }
                 }));
+                toast.success(isFollowing ? `Following ${recipe.author.username}` : `Unfollowed ${recipe.author.username}`);
            })
-           .catch(err => console.error("Follow failed"));
+           .catch(() => toast.error("Follow action failed."));
     };
 
     if (!recipe) return <div className="text-center mt-5">Loading...</div>;
@@ -162,13 +170,14 @@ function RecipeDetail() {
                     
                     <div className="d-flex align-items-center mb-3">
                         <p className="text-muted mb-0 me-3">
-                            By <Link to={`/profile/${recipe.author.username}`} className="fw-bold text-dark text-decoration-none">{recipe.author.username}</Link>
+                            By <Link to={`/profile/${recipe.author.username}`} className="fw-bold text-decoration-none" style={{color: 'var(--brand-color)'}}>{recipe.author.username}</Link>
                         </p>
                         
+                        {/* ✅ FIX: Only show Follow button if logged in AND not the author */}
                         {currentUser && currentUser.username !== recipe.author.username && (
                             <button 
                                 onClick={handleFollowToggle} 
-                                className={`btn btn-sm ${recipe.author.is_following ? 'btn-secondary' : 'btn-primary'}`}
+                                className={`btn btn-sm ${recipe.author.is_following ? 'btn-secondary' : 'btn-outline-primary'}`}
                             >
                                 {recipe.author.is_following ? 'Unfollow' : 'Follow'}
                             </button>
@@ -189,37 +198,37 @@ function RecipeDetail() {
                         />
                     )}
                     
-                    {/* ✅ UPDATED ACTION BUTTONS */}
-                    <div className="mb-4 d-flex gap-2">
-                        {/* 1. Like Button (Heart) */}
-                        <button 
-                            onClick={handleLikeToggle} 
-                            className={`btn ${recipe.is_liked ? 'btn-danger' : 'btn-outline-danger'}`}
-                        >
-                            <i className={`bi ${recipe.is_liked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {recipe.is_liked ? 'Liked' : 'Like'}
-                        </button>
-                        
-                        {/* 2. Save Button (Bookmark) */}
-                        <button 
-                            onClick={toggleFav} 
-                            className={`btn ${isFav ? 'btn-primary' : 'btn-outline-primary'}`}
-                        >
-                            <i className={`bi ${isFav ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i> {isFav ? 'Saved' : 'Save'}
-                        </button>
+                    {/* ✅ FIX: Only show interaction buttons for Logged In Users */}
+                    {currentUser && (
+                        <div className="mb-4 d-flex gap-2">
+                            <button 
+                                onClick={handleLikeToggle} 
+                                className={`btn ${recipe.is_liked ? 'btn-danger' : 'btn-outline-danger'}`}
+                                style={recipe.is_liked ? {backgroundColor: '#dc3545', borderColor: '#dc3545'} : {color: '#dc3545', borderColor: '#dc3545'}}
+                            >
+                                <i className={`bi ${recipe.is_liked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {recipe.is_liked ? 'Liked' : 'Like'}
+                            </button>
+                            
+                            <button 
+                                onClick={toggleFav} 
+                                className={`btn ${isFav ? 'btn-primary' : 'btn-outline-primary'}`}
+                            >
+                                <i className={`bi ${isFav ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i> {isFav ? 'Saved' : 'Save'}
+                            </button>
 
-                        {/* 3. Owner/Admin Buttons */}
-                        {isOwnerOrAdmin && (
-                            <>
-                                <Link to={`/edit-recipe/${recipe.id}`} className="btn btn-secondary">Edit</Link>
-                                <button onClick={handleDelete} className="btn btn-outline-secondary">Delete</button>
-                            </>
-                        )}
-                    </div>
+                            {isOwnerOrAdmin && (
+                                <>
+                                    <Link to={`/edit-recipe/${recipe.id}`} className="btn btn-secondary">Edit</Link>
+                                    <button onClick={handleDelete} className="btn btn-outline-secondary">Delete</button>
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     <p className="lead text-muted mb-4">{recipe.description}</p>
                     <div className="row mt-4">
                         <div className="col-md-5 mb-4">
-                            <div className="bg-light p-4 rounded h-100">
+                            <div className="bg-light p-4 rounded h-100 card">
                                 <h4 className="mb-3">Ingredients</h4>
                                 <ul className="list-unstyled">
                                     {recipe.ingredients_list?.map((ing, i) => (
@@ -238,28 +247,35 @@ function RecipeDetail() {
 
                     <hr className="my-5" />
 
-                    <div className="row">
-                        <div className="col-md-6 mb-4">
-                            <h4>Rate this Recipe</h4>
-                            <p>Share your thoughts with other chefs.</p>
-                            <RatingInput currentRating={0} onRatingSubmit={handleRatingSubmit} />
+                    {/* ✅ FIX: Only show Rate & Comment Forms if logged in */}
+                    {currentUser ? (
+                        <div className="row">
+                            <div className="col-md-6 mb-4">
+                                <h4>Rate this Recipe</h4>
+                                <p>Share your thoughts with other chefs.</p>
+                                <RatingInput currentRating={0} onRatingSubmit={handleRatingSubmit} />
+                            </div>
+                            <div className="col-md-6 mb-4">
+                                <h4>Leave a Comment</h4>
+                                <form onSubmit={handleCommentSubmit}>
+                                    <div className="mb-3">
+                                        <textarea
+                                            className="form-control"
+                                            rows="3"
+                                            placeholder="Write your comment..."
+                                            value={newComment}
+                                            onChange={(e) => setNewComment(e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                    <button type="submit" className="btn btn-success">Post Comment</button>
+                                </form>
+                            </div>
                         </div>
-                        <div className="col-md-6 mb-4">
-                            <h4>Leave a Comment</h4>
-                            <form onSubmit={handleCommentSubmit}>
-                                <div className="mb-3">
-                                    <textarea
-                                        className="form-control"
-                                        rows="3"
-                                        placeholder="Write your comment..."
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                    ></textarea>
-                                </div>
-                                <button type="submit" className="btn btn-success">Post Comment</button>
-                            </form>
+                    ) : (
+                        <div className="alert alert-light text-center border mb-5">
+                            <Link to="/login" className="fw-bold" style={{color: 'var(--brand-color)'}}>Login</Link> to rate or comment on this recipe.
                         </div>
-                    </div>
+                    )}
 
                     <div className="mt-5">
                         <h3 className="mb-4">Comments ({recipe.comments.length})</h3>

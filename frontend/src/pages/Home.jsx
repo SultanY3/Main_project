@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { Link, useSearchParams } from "react-router-dom";
-import RecipeCard from "../components/RecipeCard"; // Using the reusable component
+import RecipeCard, { RecipeCardSkeleton } from "../components/RecipeCard"; // ✅ Import Skeleton
 
 function Home() {
     const [recipes, setRecipes] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true); // ✅ Added loading state
     
     // Get URL search params
     const [searchParams, setSearchParams] = useSearchParams();
@@ -14,14 +15,16 @@ function Home() {
     const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
 
     useEffect(() => {
-        getRecipes();
-        getCategories();
+        setLoading(true); // Start loading
+        
+        // Run both fetches in parallel
+        Promise.all([getRecipes(), getCategories()])
+            .finally(() => setLoading(false)); // Stop loading when both are done
 
-        // ✅ FIX: Sync the input box state to the URL search param
-        // This clears the box when the 'search' param is removed (e.g., clicking Home)
+        // Sync the input box state to the URL search param
         setSearchInput(searchParams.get("search") || "");
 
-    }, [searchParams]); // Re-runs whenever the URL params change
+    }, [searchParams]); 
 
     const getRecipes = () => {
         const category = searchParams.get("category");
@@ -37,18 +40,21 @@ function Home() {
             params.append("category", category);
         }
 
-        api.get(`${url}?${params.toString()}`)
+        // Return the promise so we can use .finally() in useEffect
+        return api.get(`${url}?${params.toString()}`)
            .then((res) => setRecipes(res.data))
            .catch((err) => console.error(err));
     };
 
     const getCategories = () => {
-        api.get("categories/").then((res) => setCategories(res.data));
+        // Return the promise here too
+        return api.get("categories/")
+            .then((res) => setCategories(res.data))
+            .catch((err) => console.error(err));
     };
 
     // --- HANDLERS ---
     
-    // This function updates the search param
     const handleSearch = (e) => {
         e.preventDefault();
         const params = new URLSearchParams(searchParams);
@@ -60,17 +66,15 @@ function Home() {
         setSearchParams(params);
     };
     
-    // This function updates the category param
     const handleCategoryClick = (catName) => {
         const params = new URLSearchParams(searchParams);
         params.set("category", catName);
         setSearchParams(params);
     };
 
-    // This function now ONLY removes the category param
     const handleAllCategory = () => {
         const params = new URLSearchParams(searchParams);
-        params.delete("category"); // Keep other params like 'search'
+        params.delete("category"); 
         setSearchParams(params);
     };
 
@@ -81,7 +85,7 @@ function Home() {
                 <input 
                     className="form-control"
                     placeholder="Search recipes..." 
-                    value={searchInput} // This is now correctly synced by useEffect
+                    value={searchInput} 
                     onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <button className="btn btn-primary" type="submit">Search</button>
@@ -104,12 +108,28 @@ function Home() {
 
             {/* Recipe Grid */}
             <div className="row g-4">
-                {recipes.map((recipe) => (
-                    <div className="col-lg-4 col-md-6" key={recipe.id}>
-                        {/* Use the reusable RecipeCard component */}
-                        <RecipeCard recipe={recipe} />
+                {loading ? (
+                    // ✅ Show 6 Skeletons while loading
+                    [...Array(6)].map((_, index) => (
+                        <div className="col-lg-4 col-md-6" key={index}>
+                            <RecipeCardSkeleton />
+                        </div>
+                    ))
+                ) : (
+                    // Show real recipes when loaded
+                    recipes.map((recipe) => (
+                        <div className="col-lg-4 col-md-6" key={recipe.id}>
+                            <RecipeCard recipe={recipe} />
+                        </div>
+                    ))
+                )}
+                
+                {!loading && recipes.length === 0 && (
+                    <div className="col-12 text-center mt-5">
+                        <h3>No recipes found.</h3>
+                        <p className="text-muted">Try adjusting your search or filters.</p>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );

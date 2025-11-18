@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api";
-import RecipeCard from "../components/RecipeCard";
+import RecipeCard, { RecipeCardSkeleton } from "../components/RecipeCard"; // 1. Import Skeleton
 import { Link } from "react-router-dom";
 
 function Feed() {
@@ -8,13 +8,12 @@ function Feed() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         api.get("recipes/feed/")
            .then(res => setRecipes(res.data))
            .catch(err => console.error(err))
            .finally(() => setLoading(false));
     }, []);
-
-    if (loading) return <div className="text-center mt-5">Loading your feed...</div>;
 
     return (
         <div className="container mt-4">
@@ -22,7 +21,14 @@ function Feed() {
             <p className="text-muted">New recipes from authors you follow.</p>
             <hr />
             <div className="row g-4">
-                {recipes.length > 0 ? (
+                {loading ? (
+                    // 2. Show Skeletons
+                    [...Array(4)].map((_, index) => (
+                        <div className="col-lg-4 col-md-6" key={index}>
+                            <RecipeCardSkeleton />
+                        </div>
+                    ))
+                ) : recipes.length > 0 ? (
                     recipes.map((recipe) => (
                         <div className="col-lg-4 col-md-6" key={recipe.id}>
                             <RecipeCard recipe={recipe} />

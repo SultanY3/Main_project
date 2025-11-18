@@ -1,19 +1,23 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom"; 
 import api from "../api";
 
 function Chatbot() {
+    const location = useLocation(); 
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { sender: 'bot', text: 'Hi! I am GohanBot. Ask me anything about cooking! 🍳' }
+        { sender: 'bot', text: 'Hi! I am GohanBot. Ask me anything about cooking!' }
     ]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     
-    // Auto-scroll to bottom of chat
     const messagesEndRef = useRef(null);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
+    // ✅ Hooks must always run, so keep useEffect here
     useEffect(scrollToBottom, [messages, isOpen]);
 
     const handleSend = async (e) => {
@@ -36,25 +40,41 @@ function Chatbot() {
         }
     };
 
+    // ✅ Helper style for brand color matching
+    const brandStyle = { backgroundColor: 'var(--brand-color)', borderColor: 'var(--brand-color)', color: 'white' };
+
+    // 🛑 MOVED LOGIC HERE: Check location AFTER all hooks are declared
+    const hideOnPages = ["/login", "/register", "/forgot-password"];
+    if (hideOnPages.includes(location.pathname)) {
+        return null; // Render nothing if on these pages
+    }
+
     return (
         <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
             
             {/* Chat Window */}
             {isOpen && (
                 <div className="card shadow mb-3" style={{ width: '400px', height: '500px', display: 'flex', flexDirection: 'column' }}>
-                    <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <strong>👨‍🍳 GohanBot</strong>
+                    {/* Header */}
+                    <div className="card-header text-white d-flex justify-content-between align-items-center"
+                         style={{ backgroundColor: 'var(--brand-color)' }}>
+                        <strong><i className="bi bi-robot me-2"></i>GohanBot</strong>
                         <button onClick={() => setIsOpen(false)} className="btn btn-sm text-white">
                             <i className="bi bi-x-lg"></i>
                         </button>
                     </div>
                     
-                    <div className="card-body p-2" style={{ flex: 1, overflowY: 'auto', backgroundColor: '#f8f9fa' }}>
+                    {/* Body */}
+                    <div className="card-body p-2" style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--bg-body)' }}>
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`d-flex ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'} mb-2`}>
                                 <div 
-                                    className={`p-2 rounded text-white ${msg.sender === 'user' ? 'bg-primary' : 'bg-secondary'}`} 
-                                    style={{ maxWidth: '80%', fontSize: '0.9rem' }}
+                                    className={`p-2 rounded text-white`} 
+                                    style={{ 
+                                        maxWidth: '80%', 
+                                        fontSize: '0.9rem',
+                                        backgroundColor: msg.sender === 'user' ? 'var(--brand-color)' : '#6c757d'
+                                    }}
                                 >
                                     {msg.text}
                                 </div>
@@ -64,6 +84,7 @@ function Chatbot() {
                         <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Footer */}
                     <div className="card-footer p-2">
                         <form onSubmit={handleSend} className="d-flex gap-2">
                             <input 
@@ -73,7 +94,7 @@ function Chatbot() {
                                 value={input} 
                                 onChange={(e) => setInput(e.target.value)}
                             />
-                            <button type="submit" className="btn btn-sm btn-success" disabled={loading}>
+                            <button type="submit" className="btn btn-sm btn-primary" disabled={loading}>
                                 <i className="bi bi-send"></i>
                             </button>
                         </form>
@@ -85,8 +106,8 @@ function Chatbot() {
             {!isOpen && (
                 <button 
                     onClick={() => setIsOpen(true)} 
-                    className="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-                    style={{ width: '60px', height: '60px' }}
+                    className="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                    style={{ width: '60px', height: '60px', ...brandStyle }} 
                 >
                     <i className="bi bi-robot" style={{ fontSize: '1.8rem' }}></i>
                 </button>
