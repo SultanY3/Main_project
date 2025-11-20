@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "output=mainback_dump_v2.txt"
+set "output=mainback_dump_v3.txt"
 
 if exist "%output%" del "%output%"
 type nul > "%output%"
